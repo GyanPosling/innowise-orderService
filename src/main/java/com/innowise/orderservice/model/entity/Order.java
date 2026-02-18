@@ -19,9 +19,13 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.SQLDelete;
 
 @Entity
 @Table(name = "orders")
+@SQLDelete(sql = "UPDATE orders SET deleted_at = now() WHERE id = ?")
+@Filter(name = "softDelete", condition = "deleted_at is null or :includeDeleted = true")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -37,6 +41,9 @@ public class Order extends Auditable {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @Column(name = "user_email", length = 100)
+    private String userEmail;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private OrderStatus status;
@@ -44,11 +51,9 @@ public class Order extends Auditable {
     @Column(name = "total_price", nullable = false, precision = 19, scale = 2)
     private BigDecimal totalPrice;
 
-    @Builder.Default
-    @Column(name = "deleted", nullable = false)
-    private Boolean deleted = false;
-
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Filter(name = "softDelete", condition = "deleted_at is null or :includeDeleted = true")
     @Builder.Default
     private List<OrderItem> orderItems = new ArrayList<>();
 }
+

@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: orderservice
+  jpa:
+    hibernate:
+      ddl-auto: none
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+  config:
+    import: optional:file:.env[.properties]
+
+jwt:
+  secret: ${JWT_SECRET}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      userService:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        slowCallDurationThreshold: 2s
+        slowCallRateThreshold: 50
+        recordExceptions: org.springframework.web.client.HttpServerErrorException,feign.FeignException,java.io.IOException
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3

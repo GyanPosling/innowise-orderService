@@ -1,0 +1,15 @@
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:postgres}:5432/${POSTGRES_DB:orderserviceDb}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+authservice:
+  base-url: ${AUTHSERVICE_BASE_URL:http://host.docker.internal:8082}
+
+userservice:
+  base-url: ${USERSERVICE_BASE_URL:http://host.docker.internal:8081}

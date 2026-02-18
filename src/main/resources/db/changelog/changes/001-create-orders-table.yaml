@@ -40,10 +40,8 @@ databaseChangeLog:
               - column:
                   name: updated_at
                   type: TIMESTAMP
-        - addCheckConstraint:
-            tableName: orders
-            constraintName: chk_orders_status
-            checkConstraint: "status IN ('NEW','PAID','SHIPPED','DELIVERED','CANCELLED')"
+        - sql:
+            sql: "ALTER TABLE orders ADD CONSTRAINT chk_orders_status CHECK (status IN ('NEW','PAID','SHIPPED','DELIVERED','CANCELLED'))"
         - createIndex:
             tableName: orders
             indexName: idx_orders_user_id

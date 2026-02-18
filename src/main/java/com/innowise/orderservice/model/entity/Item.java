@@ -12,9 +12,13 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.SQLDelete;
 
 @Entity
 @Table(name = "items")
+@SQLDelete(sql = "UPDATE items SET deleted_at = now() WHERE id = ?")
+@Filter(name = "softDelete", condition = "deleted_at is null or :includeDeleted = true")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
