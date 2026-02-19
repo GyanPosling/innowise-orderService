@@ -36,7 +36,7 @@
 		<sonar.projectKey>GyanPosling_innowise-orderService</sonar.projectKey>
 		<sonar.organization>gyanposling</sonar.organization>
 		<sonar.exclusions>
-			**/config/**,**/exception/**,**/mapper/**,**/model/**,**/security/**,**/repository/**
+			**/client/**,**/config/**,**/exception/**,**/mapper/**,**/model/**,**/repository/**,**/security/**,**/OrderserviceApplication.java
 		</sonar.exclusions>
 		<sonar.coverage.exclusions>**/*</sonar.coverage.exclusions>
 	</properties>
@@ -195,3 +195,4 @@
 	</build>
 
 </project>
+

@@ -1,4 +1,4 @@
-name: ci
+git name: ci
 
 on:
   push:
