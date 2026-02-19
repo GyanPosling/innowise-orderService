@@ -15,7 +15,6 @@ import com.innowise.orderservice.repository.OrderItemRepository;
 import com.innowise.orderservice.repository.OrderRepository;
 import com.innowise.orderservice.service.OrderItemService;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -53,7 +52,7 @@ public class OrderItemServiceImpl implements OrderItemService {
     public List<OrderItemResponseDto> getAll() {
         return orderItemRepository.findAll().stream()
                 .map(orderItemMapper::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

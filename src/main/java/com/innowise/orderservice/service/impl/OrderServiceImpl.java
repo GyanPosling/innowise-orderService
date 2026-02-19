@@ -153,7 +153,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private UserInfoResponse getUserByEmailFallback(String email, Throwable ex) {
-        throw new ServiceUnavailableException("User service is unavailable", ex);
+        throw new ServiceUnavailableException("User service is unavailable for email: " + email, ex);
     }
 
     private Map<Long, Item> resolveItems(List<OrderItemRequest> itemRequests) {

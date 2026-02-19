@@ -9,7 +9,6 @@ import com.innowise.orderservice.model.entity.Item;
 import com.innowise.orderservice.repository.ItemRepository;
 import com.innowise.orderservice.service.ItemService;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -41,7 +40,7 @@ public class ItemServiceImpl implements ItemService {
     public List<ItemResponse> getAll() {
         return itemRepository.findAll().stream()
                 .map(itemMapper::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

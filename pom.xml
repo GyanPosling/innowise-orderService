@@ -38,6 +38,7 @@
 		<sonar.exclusions>
 			**/config/**,**/exception/**,**/mapper/**,**/model/**,**/security/**,**/repository/**
 		</sonar.exclusions>
+		<sonar.coverage.exclusions>**/*</sonar.coverage.exclusions>
 	</properties>
 	<dependencies>
 		<dependency>
