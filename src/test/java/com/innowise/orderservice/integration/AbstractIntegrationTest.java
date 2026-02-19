@@ -19,7 +19,6 @@ import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -27,12 +26,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Import(TestcontainersConfiguration.class)
 public abstract class AbstractIntegrationTest {
@@ -46,7 +46,6 @@ public abstract class AbstractIntegrationTest {
         WIRE_MOCK_SERVER.start();
     }
 
-    @Autowired
     protected MockMvc mockMvc;
 
     @Autowired
@@ -54,6 +53,9 @@ public abstract class AbstractIntegrationTest {
 
     @Autowired
     protected DataSource dataSource;
+
+    @Autowired
+    private WebApplicationContext webApplicationContext;
 
     @Value("${jwt.secret}")
     private String jwtSecret;
@@ -67,6 +69,7 @@ public abstract class AbstractIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
         this.jdbcTemplate = new JdbcTemplate(dataSource);
         WIRE_MOCK_SERVER.resetAll();
         jdbcTemplate.update("DELETE FROM order_items");
