@@ -11,72 +11,69 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.springframework.stereotype.Component;
+import org.mapstruct.AfterMapping;
+import org.mapstruct.Context;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
-@Component
-public class OrderMapper {
+@Mapper(componentModel = "spring")
+public interface OrderMapper {
 
-    public Order toEntity(OrderCreateRequest request, Map<Long, Item> itemsById) {
-        if (request == null) {
+    @Mapping(target = "orderItems", ignore = true)
+    Order toEntity(OrderCreateRequest request, @Context Map<Long, Item> itemsById);
+
+    @Mapping(target = "items", source = "orderItems")
+    OrderResponse toResponse(Order order);
+
+    @Mapping(target = "itemId", source = "item.id")
+    OrderItemResponse toResponse(OrderItem orderItem);
+
+    default OrderItem toOrderItem(
+            Order order,
+            OrderItemRequest itemRequest,
+            @Context Map<Long, Item> itemsById
+    ) {
+        if (itemRequest == null) {
             return null;
         }
-        Order order = new Order();
-        order.setUserId(request.getUserId());
-        order.setUserEmail(request.getUserEmail());
-        order.setStatus(request.getStatus());
-        order.setTotalPrice(request.getTotalPrice());
-        order.setOrderItems(toOrderItems(order, request.getItems(), itemsById));
-        return order;
-    }
-
-    public List<OrderItem> toOrderItems(Order order, List<OrderItemRequest> itemRequests, Map<Long, Item> itemsById) {
-        if (itemRequests == null) {
-            return new ArrayList<>();
-        }
-        List<OrderItem> items = new ArrayList<>();
-        for (OrderItemRequest itemRequest : itemRequests) {
-            items.add(toOrderItem(order, itemRequest, itemsById.get(itemRequest.getItemId())));
-        }
-        return items;
-    }
-
-    public OrderResponse toResponse(Order order) {
-        if (order == null) {
-            return null;
-        }
-        List<OrderItemResponse> items = order.getOrderItems() == null
-                ? List.of()
-                : order.getOrderItems().stream()
-                        .map(this::toResponse)
-                        .collect(Collectors.toList());
-        return OrderResponse.builder()
-                .id(order.getId())
-                .userId(order.getUserId())
-                .userEmail(order.getUserEmail())
-                .status(order.getStatus())
-                .totalPrice(order.getTotalPrice())
-                .deletedAt(order.getDeletedAt())
-                .createdAt(order.getCreatedAt())
-                .updatedAt(order.getUpdatedAt())
-                .items(items)
-                .build();
-    }
-
-    private OrderItem toOrderItem(Order order, OrderItemRequest itemRequest, Item item) {
         OrderItem orderItem = new OrderItem();
         orderItem.setOrder(order);
         orderItem.setQuantity(itemRequest.getQuantity());
-        orderItem.setItem(item);
+        orderItem.setItem(itemsById.get(itemRequest.getItemId()));
         return orderItem;
     }
 
-    private OrderItemResponse toResponse(OrderItem orderItem) {
-        Long itemId = orderItem.getItem() != null ? orderItem.getItem().getId() : null;
-        return OrderItemResponse.builder()
-                .id(orderItem.getId())
-                .itemId(itemId)
-                .quantity(orderItem.getQuantity())
-                .build();
+    default List<OrderItem> toOrderItems(
+            Order order,
+            List<OrderItemRequest> itemRequests,
+            @Context Map<Long, Item> itemsById
+    ) {
+        if (itemRequests == null || itemRequests.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return itemRequests.stream()
+                .map(itemRequest -> toOrderItem(order, itemRequest, itemsById))
+                .collect(Collectors.toList());
+    }
+
+    @AfterMapping
+    default void fillOrderItems(
+            @MappingTarget Order order,
+            OrderCreateRequest request,
+            @Context Map<Long, Item> itemsById
+    ) {
+        if (order == null) {
+            return;
+        }
+        if (request == null || request.getItems() == null) {
+            order.setOrderItems(new ArrayList<>());
+            return;
+        }
+        List<OrderItem> items = request.getItems().stream()
+                .map(itemRequest -> toOrderItem(order, itemRequest, itemsById))
+                .collect(Collectors.toList());
+        order.setOrderItems(items);
     }
 }
 

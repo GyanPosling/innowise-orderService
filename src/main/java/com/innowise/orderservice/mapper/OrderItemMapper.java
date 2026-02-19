@@ -5,33 +5,18 @@ import com.innowise.orderservice.model.dto.response.OrderItemResponseDto;
 import com.innowise.orderservice.model.entity.Item;
 import com.innowise.orderservice.model.entity.Order;
 import com.innowise.orderservice.model.entity.OrderItem;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
-@Component
-public class OrderItemMapper {
+@Mapper(componentModel = "spring")
+public interface OrderItemMapper {
 
-    public OrderItem toEntity(OrderItemCreateRequest request, Order order, Item item) {
-        if (request == null) {
-            return null;
-        }
-        OrderItem orderItem = new OrderItem();
-        orderItem.setOrder(order);
-        orderItem.setItem(item);
-        orderItem.setQuantity(request.getQuantity());
-        return orderItem;
-    }
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "order", source = "order")
+    @Mapping(target = "item", source = "item")
+    OrderItem toEntity(OrderItemCreateRequest request, Order order, Item item);
 
-    public OrderItemResponseDto toResponse(OrderItem orderItem) {
-        if (orderItem == null) {
-            return null;
-        }
-        Long orderId = orderItem.getOrder() != null ? orderItem.getOrder().getId() : null;
-        Long itemId = orderItem.getItem() != null ? orderItem.getItem().getId() : null;
-        return OrderItemResponseDto.builder()
-                .id(orderItem.getId())
-                .orderId(orderId)
-                .itemId(itemId)
-                .quantity(orderItem.getQuantity())
-                .build();
-    }
+    @Mapping(target = "orderId", source = "order.id")
+    @Mapping(target = "itemId", source = "item.id")
+    OrderItemResponseDto toResponse(OrderItem orderItem);
 }

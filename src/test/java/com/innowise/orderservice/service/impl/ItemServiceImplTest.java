@@ -22,6 +22,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -37,7 +38,7 @@ class ItemServiceImplTest {
     private ItemRepository itemRepository;
 
     @Spy
-    private ItemMapper itemMapper = new ItemMapper();
+    private ItemMapper itemMapper = Mappers.getMapper(ItemMapper.class);
 
     private ItemCreateRequest createRequest;
     private Item item;
