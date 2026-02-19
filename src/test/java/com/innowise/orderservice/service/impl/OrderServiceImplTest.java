@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -178,6 +179,23 @@ class OrderServiceImplTest {
     }
 
     @Test
+    void getById_shouldSkipUserFetch_whenEmailMissing() {
+        Order order = new Order();
+        OrderResponse response = OrderResponse.builder()
+                .id(1L)
+                .userEmail(" ")
+                .build();
+
+        when(orderRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(order));
+        when(orderMapper.toResponse(order)).thenReturn(response);
+
+        OrderResponse result = orderService.getById(1L);
+
+        assertEquals(" ", result.getUserEmail());
+        verify(userServiceClient, never()).getUserByEmail(anyString());
+    }
+
+    @Test
     void getAll_shouldEnrichUserInfo() {
         Order order = new Order();
         OrderResponse response = OrderResponse.builder()
@@ -201,6 +219,25 @@ class OrderServiceImplTest {
     }
 
     @Test
+    void getByUserId_shouldReturnOrders() {
+        Order order = new Order();
+        OrderResponse response = OrderResponse.builder()
+                .id(1L)
+                .userEmail("user@example.com")
+                .build();
+        UserInfoResponse userInfo = UserInfoResponse.builder().email("user@example.com").build();
+
+        when(orderRepository.findAllByUserId(7L)).thenReturn(List.of(order));
+        when(orderMapper.toResponse(order)).thenReturn(response);
+        when(userServiceClient.getUserByEmail("user@example.com")).thenReturn(userInfo);
+
+        List<OrderResponse> results = orderService.getByUserId(7L);
+
+        assertEquals(1, results.size());
+        assertEquals("user@example.com", results.get(0).getUser().getEmail());
+    }
+
+    @Test
     void update_shouldThrowBadRequest_whenUserEmailBlank() {
         OrderUpdateRequest request = OrderUpdateRequest.builder()
                 .userEmail("")
@@ -208,6 +245,46 @@ class OrderServiceImplTest {
         when(orderRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(new Order()));
 
         assertThrows(BadRequestException.class, () -> orderService.update(1L, request));
+    }
+
+    @Test
+    void update_shouldSetUserId_whenAdmin() {
+        Order existing = new Order();
+        existing.setUserId(1L);
+        OrderUpdateRequest request = OrderUpdateRequest.builder()
+                .userId(99L)
+                .build();
+        OrderResponse response = OrderResponse.builder().id(1L).userId(99L).build();
+
+        when(orderRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(existing));
+        when(securityUtil.isAdmin()).thenReturn(true);
+        when(orderRepository.save(existing)).thenReturn(existing);
+        when(orderMapper.toResponse(existing)).thenReturn(response);
+
+        OrderResponse result = orderService.update(1L, request);
+
+        assertEquals(99L, existing.getUserId());
+        assertEquals(99L, result.getUserId());
+    }
+
+    @Test
+    void update_shouldIgnoreUserId_whenNotAdmin() {
+        Order existing = new Order();
+        existing.setUserId(1L);
+        OrderUpdateRequest request = OrderUpdateRequest.builder()
+                .userId(99L)
+                .build();
+        OrderResponse response = OrderResponse.builder().id(1L).userId(1L).build();
+
+        when(orderRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(existing));
+        when(securityUtil.isAdmin()).thenReturn(false);
+        when(orderRepository.save(existing)).thenReturn(existing);
+        when(orderMapper.toResponse(existing)).thenReturn(response);
+
+        OrderResponse result = orderService.update(1L, request);
+
+        assertEquals(1L, existing.getUserId());
+        assertEquals(1L, result.getUserId());
     }
 
     @Test
@@ -231,6 +308,28 @@ class OrderServiceImplTest {
         OrderResponse result = orderService.update(1L, request);
 
         assertEquals(OrderStatus.PAID, result.getStatus());
+        assertEquals(1, existing.getOrderItems().size());
+    }
+
+    @Test
+    void update_shouldCreateItemsList_whenMissing() {
+        Order existing = new Order();
+        existing.setOrderItems(null);
+        OrderUpdateRequest request = OrderUpdateRequest.builder()
+                .items(List.of(OrderItemRequest.builder().itemId(1L).quantity(1).build()))
+                .build();
+        OrderItem orderItem = new OrderItem();
+        OrderResponse response = OrderResponse.builder().id(1L).build();
+
+        when(orderRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(existing));
+        when(itemRepository.findAllByIdInAndDeletedAtIsNull(anyCollection())).thenReturn(List.of(Item.builder().id(1L).build()));
+        when(orderMapper.toOrderItems(eq(existing), eq(request.getItems()), anyMap())).thenReturn(List.of(orderItem));
+        when(orderRepository.save(existing)).thenReturn(existing);
+        when(orderMapper.toResponse(existing)).thenReturn(response);
+
+        orderService.update(1L, request);
+
+        assertNotNull(existing.getOrderItems());
         assertEquals(1, existing.getOrderItems().size());
     }
 
