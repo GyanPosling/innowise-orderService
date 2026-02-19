@@ -53,17 +53,6 @@ public class SecurityUtil {
         return order.map(o -> userId.equals(o.getUserId())).orElse(false);
     }
 
-    public boolean isOwnerByOrderItemId(Long orderItemId) {
-        Long userId = getCurrentUserId();
-        if (userId == null) {
-            return false;
-        }
-        return orderItemRepository.findByIdAndDeletedAtIsNull(orderItemId)
-                .map(orderItem -> orderItem.getOrder().getUserId())
-                .map(userId::equals)
-                .orElse(false);
-    }
-
     public boolean isOwnerByUserId(Long userId) {
         Long currentUserId = getCurrentUserId();
         if (currentUserId == null) {

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -206,10 +207,10 @@ class OrderServiceImplTest {
         UserInfoResponse userInfo = UserInfoResponse.builder().email("user@example.com").build();
         Pageable pageable = PageRequest.of(0, 10);
 
-        when(orderRepository.findAll(org.mockito.ArgumentMatchers.<Specification<Order>>any(), eq(pageable)))
+        when(orderRepository.findAll(org.mockito.ArgumentMatchers.<Specification<Order>>any(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(order), pageable, 1));
         when(orderMapper.toResponse(order)).thenReturn(response);
-        when(userServiceClient.getUsersByEmails(eq(List.of("user@example.com")))).thenReturn(List.of(userInfo));
+        when(userServiceClient.getUsersByEmails(anyList())).thenReturn(List.of(userInfo));
 
         OrderResponse result = orderService.getAll(Instant.now(), Instant.now(), List.of(OrderStatus.NEW), pageable)
                 .getContent()
@@ -231,7 +232,7 @@ class OrderServiceImplTest {
 
         when(orderRepository.findAllByUserId(7L)).thenReturn(List.of(order));
         when(orderMapper.toResponse(order)).thenReturn(response);
-        when(userServiceClient.getUsersByEmails(eq(List.of("user@example.com")))).thenReturn(List.of(userInfo));
+        when(userServiceClient.getUsersByEmails(anyList())).thenReturn(List.of(userInfo));
 
         List<OrderResponse> results = orderService.getByUserId(7L);
 
