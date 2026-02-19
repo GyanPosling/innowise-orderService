@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.innowise.orderservice.TestcontainersConfiguration;
+import com.innowise.orderservice.config.TestJacksonConfig;
 import com.innowise.orderservice.model.dto.response.UserInfoResponse;
 import com.innowise.orderservice.model.entity.Role;
 import java.nio.charset.StandardCharsets;
@@ -34,7 +35,7 @@ import io.jsonwebtoken.security.Keys;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@Import(TestcontainersConfiguration.class)
+@Import({TestcontainersConfiguration.class, TestJacksonConfig.class})
 public abstract class AbstractIntegrationTest {
 
     protected static final String AUTH_HEADER = "Authorization";
