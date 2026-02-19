@@ -15,13 +15,13 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/order-items")
+@RequestMapping("/api/v1/orders/{orderId}/items")
 @RequiredArgsConstructor
 public class OrderItemController implements OrderItemControllerApi {
 
@@ -29,39 +29,42 @@ public class OrderItemController implements OrderItemControllerApi {
 
     @PostMapping
     @Override
-    @PreAuthorize("hasRole('ADMIN') or @securityUtil.isOwnerByOrderId(#request.orderId)")
-    public ResponseEntity<OrderItemResponseDto> create(@Valid @RequestBody OrderItemCreateRequest request) {
-        OrderItemResponseDto response = orderItemService.create(request);
+    @PreAuthorize("hasRole('ADMIN') or @securityUtil.isOwnerByOrderId(#orderId)")
+    public ResponseEntity<OrderItemResponseDto> create(@PathVariable Long orderId,
+                                                       @Valid @RequestBody OrderItemCreateRequest request) {
+        OrderItemResponseDto response = orderItemService.create(orderId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{itemId}")
     @Override
-    @PreAuthorize("hasRole('ADMIN') or @securityUtil.isOwnerByOrderItemId(#id)")
-    public ResponseEntity<OrderItemResponseDto> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(orderItemService.getById(id));
+    @PreAuthorize("hasRole('ADMIN') or @securityUtil.isOwnerByOrderId(#orderId)")
+    public ResponseEntity<OrderItemResponseDto> getById(@PathVariable Long orderId,
+                                                        @PathVariable Long itemId) {
+        return ResponseEntity.ok(orderItemService.getById(orderId, itemId));
     }
 
     @GetMapping
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<OrderItemResponseDto>> getAll() {
-        return ResponseEntity.ok(orderItemService.getAll());
+    @PreAuthorize("hasRole('ADMIN') or @securityUtil.isOwnerByOrderId(#orderId)")
+    public ResponseEntity<List<OrderItemResponseDto>> getAll(@PathVariable Long orderId) {
+        return ResponseEntity.ok(orderItemService.getAll(orderId));
     }
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{itemId}")
     @Override
-    @PreAuthorize("hasRole('ADMIN') or @securityUtil.isOwnerByOrderItemId(#id)")
-    public ResponseEntity<OrderItemResponseDto> update(@PathVariable Long id,
+    @PreAuthorize("hasRole('ADMIN') or @securityUtil.isOwnerByOrderId(#orderId)")
+    public ResponseEntity<OrderItemResponseDto> update(@PathVariable Long orderId,
+                                                       @PathVariable Long itemId,
                                                        @Valid @RequestBody OrderItemUpdateRequest request) {
-        return ResponseEntity.ok(orderItemService.update(id, request));
+        return ResponseEntity.ok(orderItemService.update(orderId, itemId, request));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{itemId}")
     @Override
-    @PreAuthorize("hasRole('ADMIN') or @securityUtil.isOwnerByOrderItemId(#id)")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        orderItemService.delete(id);
+    @PreAuthorize("hasRole('ADMIN') or @securityUtil.isOwnerByOrderId(#orderId)")
+    public ResponseEntity<Void> delete(@PathVariable Long orderId, @PathVariable Long itemId) {
+        orderItemService.delete(orderId, itemId);
         return ResponseEntity.noContent().build();
     }
 }

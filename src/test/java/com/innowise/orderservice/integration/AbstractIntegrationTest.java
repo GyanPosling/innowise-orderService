@@ -1,8 +1,10 @@
 package com.innowise.orderservice.integration;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -16,6 +18,7 @@ import com.innowise.orderservice.model.entity.Role;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -103,6 +106,25 @@ public abstract class AbstractIntegrationTest {
                     .willReturn(okJson(objectMapper.writeValueAsString(response))));
         } catch (JsonProcessingException ex) {
             throw new IllegalStateException("Failed to serialize user response", ex);
+        }
+    }
+
+    protected void stubUsersByEmails(List<String> emails) {
+        List<UserInfoResponse> responses = emails.stream()
+                .map(email -> UserInfoResponse.builder()
+                        .id(1)
+                        .email(email)
+                        .name("Test")
+                        .surname("User")
+                        .active(true)
+                        .build())
+                .toList();
+        try {
+            WIRE_MOCK_SERVER.stubFor(post(urlPathEqualTo("/api/users/batch"))
+                    .withRequestBody(equalToJson(objectMapper.writeValueAsString(emails)))
+                    .willReturn(okJson(objectMapper.writeValueAsString(responses))));
+        } catch (JsonProcessingException ex) {
+            throw new IllegalStateException("Failed to serialize users response", ex);
         }
     }
 

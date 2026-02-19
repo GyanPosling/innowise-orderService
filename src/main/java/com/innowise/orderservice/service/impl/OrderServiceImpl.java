@@ -23,9 +23,11 @@ import com.innowise.orderservice.service.OrderService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -81,16 +83,27 @@ public class OrderServiceImpl implements OrderService {
     public Page<OrderResponse> getAll(Instant createdFrom, Instant createdTo, Collection<OrderStatus> statuses, Pageable pageable) {
         Specification<Order> spec = Specification.where(OrderSpecifications.createdAtBetween(createdFrom, createdTo))
                 .and(OrderSpecifications.statusIn(statuses));
-        return orderRepository.findAll(spec, pageable)
-                .map(orderMapper::toResponse)
-                .map(this::enrichUser);
+        Page<Order> page = orderRepository.findAll(spec, pageable);
+        Map<String, UserInfoResponse> usersByEmail = fetchUsersByEmails(page.stream()
+                .map(Order::getUserEmail)
+                .filter(Objects::nonNull)
+                .filter(email -> !email.isBlank())
+                .collect(Collectors.toSet()));
+        return page.map(orderMapper::toResponse)
+                .map(response -> enrichUser(response, usersByEmail));
     }
 
     @Override
     public List<OrderResponse> getByUserId(Long userId) {
-        return orderRepository.findAllByUserId(userId).stream()
+        List<Order> orders = orderRepository.findAllByUserId(userId);
+        Map<String, UserInfoResponse> usersByEmail = fetchUsersByEmails(orders.stream()
+                .map(Order::getUserEmail)
+                .filter(Objects::nonNull)
+                .filter(email -> !email.isBlank())
+                .collect(Collectors.toSet()));
+        return orders.stream()
                 .map(orderMapper::toResponse)
-                .map(this::enrichUser)
+                .map(response -> enrichUser(response, usersByEmail))
                 .toList();
     }
 
@@ -146,6 +159,40 @@ public class OrderServiceImpl implements OrderService {
         }
         response.setUser(fetchUser(email));
         return response;
+    }
+
+    private OrderResponse enrichUser(OrderResponse response, Map<String, UserInfoResponse> usersByEmail) {
+        if (response == null) {
+            return null;
+        }
+        String email = response.getUserEmail();
+        if (email == null || email.isBlank()) {
+            return response;
+        }
+        UserInfoResponse user = usersByEmail.get(email);
+        if (user != null) {
+            response.setUser(user);
+        }
+        return response;
+    }
+
+    private Map<String, UserInfoResponse> fetchUsersByEmails(Set<String> emails) {
+        if (emails == null || emails.isEmpty()) {
+            return Map.of();
+        }
+        List<UserInfoResponse> users;
+        try {
+            users = userServiceClient.getUsersByEmails(new ArrayList<>(emails));
+        } catch (Exception ex) {
+            throw new ServiceUnavailableException("User service is unavailable for batch request", ex);
+        }
+        Map<String, UserInfoResponse> usersByEmail = new HashMap<>();
+        for (UserInfoResponse user : users) {
+            if (user != null && user.getEmail() != null && !user.getEmail().isBlank()) {
+                usersByEmail.put(user.getEmail(), user);
+            }
+        }
+        return usersByEmail;
     }
 
     @CircuitBreaker(name = "userService", fallbackMethod = "getUserByEmailFallback")

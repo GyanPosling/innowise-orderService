@@ -3,7 +3,7 @@ package com.innowise.orderservice.controller;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -18,6 +18,7 @@ import com.innowise.orderservice.model.entity.OrderStatus;
 import com.innowise.orderservice.repository.ItemRepository;
 import com.innowise.orderservice.repository.OrderRepository;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,7 +80,7 @@ class OrderControllerIntegrationTest extends AbstractIntegrationTest {
                 .item(item)
                 .quantity(1)
                 .build();
-        order.setOrderItems(new java.util.ArrayList<>(List.of(orderItem)));
+        order.setOrderItems(new ArrayList<>(List.of(orderItem)));
         Order saved = orderRepository.save(order);
         stubUserByEmail("buyer11@example.com");
 
@@ -110,7 +111,7 @@ class OrderControllerIntegrationTest extends AbstractIntegrationTest {
                 .item(item)
                 .quantity(1)
                 .build();
-        orderOne.setOrderItems(new java.util.ArrayList<>(List.of(itemOne)));
+        orderOne.setOrderItems(new ArrayList<>(List.of(itemOne)));
         orderRepository.save(orderOne);
 
         Order orderTwo = Order.builder()
@@ -124,11 +125,10 @@ class OrderControllerIntegrationTest extends AbstractIntegrationTest {
                 .item(item)
                 .quantity(2)
                 .build();
-        orderTwo.setOrderItems(new java.util.ArrayList<>(List.of(itemTwo)));
+        orderTwo.setOrderItems(new ArrayList<>(List.of(itemTwo)));
         orderRepository.save(orderTwo);
 
-        stubUserByEmail("buyer12@example.com");
-        stubUserByEmail("buyer13@example.com");
+        stubUsersByEmails(List.of("buyer12@example.com", "buyer13@example.com"));
 
         mockMvc.perform(get("/api/v1/orders")
                         .param("page", "0")
@@ -155,11 +155,12 @@ class OrderControllerIntegrationTest extends AbstractIntegrationTest {
                 .item(item)
                 .quantity(1)
                 .build();
-        order.setOrderItems(new java.util.ArrayList<>(List.of(orderItem)));
+        order.setOrderItems(new ArrayList<>(List.of(orderItem)));
         orderRepository.save(order);
-        stubUserByEmail("buyer20@example.com");
+        stubUsersByEmails(List.of("buyer20@example.com"));
 
-        mockMvc.perform(get("/api/v1/orders/user/{userId}", 20L)
+        mockMvc.perform(get("/api/v1/orders")
+                        .param("userId", "20")
                         .header(AUTH_HEADER, userAuthHeader(20L, "buyer20@example.com")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
@@ -187,7 +188,7 @@ class OrderControllerIntegrationTest extends AbstractIntegrationTest {
                 .item(item)
                 .quantity(1)
                 .build();
-        order.setOrderItems(new java.util.ArrayList<>(List.of(orderItem)));
+        order.setOrderItems(new ArrayList<>(List.of(orderItem)));
         Order saved = orderRepository.save(order);
         stubUserByEmail("buyer14@example.com");
 
@@ -200,7 +201,7 @@ class OrderControllerIntegrationTest extends AbstractIntegrationTest {
                         .build()))
                 .build();
 
-        mockMvc.perform(put("/api/v1/orders/{id}", saved.getId())
+        mockMvc.perform(patch("/api/v1/orders/{id}", saved.getId())
                         .header(AUTH_HEADER, adminAuthHeader())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))

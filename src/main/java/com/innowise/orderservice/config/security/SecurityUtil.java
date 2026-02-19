@@ -71,12 +71,4 @@ public class SecurityUtil {
         }
         return currentUserId.equals(userId);
     }
-
-    public boolean isOwnerByEmail(String email) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || auth.getName() == null) {
-            return false;
-        }
-        return auth.getName().equalsIgnoreCase(email);
-    }
 }

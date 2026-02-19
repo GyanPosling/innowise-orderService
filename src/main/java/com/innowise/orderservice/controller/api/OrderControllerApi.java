@@ -49,14 +49,14 @@ public interface OrderControllerApi {
             Pageable pageable
     );
 
-    @Operation(summary = "Get orders by user ID")
+    @Operation(summary = "Get orders by user ID (query parameter)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Orders retrieved"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
     ResponseEntity<List<OrderResponse>> getByUserId(Long userId);
 
-    @Operation(summary = "Update order by ID")
+    @Operation(summary = "Partially update order by ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Order updated",
                     content = @Content(mediaType = "application/json",

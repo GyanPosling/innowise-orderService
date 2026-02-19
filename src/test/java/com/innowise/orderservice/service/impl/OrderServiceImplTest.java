@@ -198,6 +198,7 @@ class OrderServiceImplTest {
     @Test
     void getAll_shouldEnrichUserInfo() {
         Order order = new Order();
+        order.setUserEmail("user@example.com");
         OrderResponse response = OrderResponse.builder()
                 .id(1L)
                 .userEmail("user@example.com")
@@ -208,7 +209,7 @@ class OrderServiceImplTest {
         when(orderRepository.findAll(org.mockito.ArgumentMatchers.<Specification<Order>>any(), eq(pageable)))
                 .thenReturn(new PageImpl<>(List.of(order), pageable, 1));
         when(orderMapper.toResponse(order)).thenReturn(response);
-        when(userServiceClient.getUserByEmail("user@example.com")).thenReturn(userInfo);
+        when(userServiceClient.getUsersByEmails(eq(List.of("user@example.com")))).thenReturn(List.of(userInfo));
 
         OrderResponse result = orderService.getAll(Instant.now(), Instant.now(), List.of(OrderStatus.NEW), pageable)
                 .getContent()
@@ -221,6 +222,7 @@ class OrderServiceImplTest {
     @Test
     void getByUserId_shouldReturnOrders() {
         Order order = new Order();
+        order.setUserEmail("user@example.com");
         OrderResponse response = OrderResponse.builder()
                 .id(1L)
                 .userEmail("user@example.com")
@@ -229,7 +231,7 @@ class OrderServiceImplTest {
 
         when(orderRepository.findAllByUserId(7L)).thenReturn(List.of(order));
         when(orderMapper.toResponse(order)).thenReturn(response);
-        when(userServiceClient.getUserByEmail("user@example.com")).thenReturn(userInfo);
+        when(userServiceClient.getUsersByEmails(eq(List.of("user@example.com")))).thenReturn(List.of(userInfo));
 
         List<OrderResponse> results = orderService.getByUserId(7L);
 

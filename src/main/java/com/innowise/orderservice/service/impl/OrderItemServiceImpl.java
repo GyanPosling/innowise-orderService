@@ -32,9 +32,9 @@ public class OrderItemServiceImpl implements OrderItemService {
 
     @Override
     @Transactional
-    public OrderItemResponseDto create(OrderItemCreateRequest orderItem) {
-        Order order = orderRepository.findByIdAndDeletedAtIsNull(orderItem.getOrderId())
-                .orElseThrow(() -> new OrderNotFoundException(orderItem.getOrderId()));
+    public OrderItemResponseDto create(Long orderId, OrderItemCreateRequest orderItem) {
+        Order order = orderRepository.findByIdAndDeletedAtIsNull(orderId)
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
         Item item = itemRepository.findByIdAndDeletedAtIsNull(orderItem.getItemId())
                 .orElseThrow(() -> new ItemNotFoundException(orderItem.getItemId()));
         OrderItem entity = orderItemMapper.toEntity(orderItem, order, item);
@@ -42,30 +42,25 @@ public class OrderItemServiceImpl implements OrderItemService {
     }
 
     @Override
-    public OrderItemResponseDto getById(Long id) {
-        OrderItem entity = orderItemRepository.findByIdAndDeletedAtIsNull(id)
+    public OrderItemResponseDto getById(Long orderId, Long id) {
+        OrderItem entity = orderItemRepository.findByIdAndOrderIdAndDeletedAtIsNull(id, orderId)
                 .orElseThrow(() -> new OrderItemNotFoundException(id));
         return orderItemMapper.toResponse(entity);
     }
 
     @Override
-    public List<OrderItemResponseDto> getAll() {
-        return orderItemRepository.findAll().stream()
+    public List<OrderItemResponseDto> getAll(Long orderId) {
+        return orderItemRepository.findAllByOrderIdAndDeletedAtIsNull(orderId).stream()
                 .map(orderItemMapper::toResponse)
                 .toList();
     }
 
     @Override
     @Transactional
-    public OrderItemResponseDto update(Long id, OrderItemUpdateRequest orderItem) {
-        OrderItem existing = orderItemRepository.findByIdAndDeletedAtIsNull(id)
+    public OrderItemResponseDto update(Long orderId, Long id, OrderItemUpdateRequest orderItem) {
+        OrderItem existing = orderItemRepository.findByIdAndOrderIdAndDeletedAtIsNull(id, orderId)
                 .orElseThrow(() -> new OrderItemNotFoundException(id));
 
-        if (orderItem.getOrderId() != null) {
-            Order order = orderRepository.findByIdAndDeletedAtIsNull(orderItem.getOrderId())
-                    .orElseThrow(() -> new OrderNotFoundException(orderItem.getOrderId()));
-            existing.setOrder(order);
-        }
         if (orderItem.getItemId() != null) {
             Item item = itemRepository.findByIdAndDeletedAtIsNull(orderItem.getItemId())
                     .orElseThrow(() -> new ItemNotFoundException(orderItem.getItemId()));
@@ -80,8 +75,8 @@ public class OrderItemServiceImpl implements OrderItemService {
 
     @Override
     @Transactional
-    public void delete(Long id) {
-        OrderItem existing = orderItemRepository.findByIdAndDeletedAtIsNull(id)
+    public void delete(Long orderId, Long id) {
+        OrderItem existing = orderItemRepository.findByIdAndOrderIdAndDeletedAtIsNull(id, orderId)
                 .orElseThrow(() -> new OrderItemNotFoundException(id));
         orderItemRepository.delete(existing);
     }

@@ -3,7 +3,7 @@ package com.innowise.orderservice.controller;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -47,12 +47,11 @@ class OrderItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .build());
 
         OrderItemCreateRequest request = OrderItemCreateRequest.builder()
-                .orderId(order.getId())
                 .itemId(item.getId())
                 .quantity(2)
                 .build();
 
-        mockMvc.perform(post("/api/v1/order-items")
+        mockMvc.perform(post("/api/v1/orders/{orderId}/items", order.getId())
                         .header(AUTH_HEADER, adminAuthHeader())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -81,7 +80,7 @@ class OrderItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .quantity(3)
                 .build());
 
-        mockMvc.perform(get("/api/v1/order-items/{id}", orderItem.getId())
+        mockMvc.perform(get("/api/v1/orders/{orderId}/items/{id}", order.getId(), orderItem.getId())
                         .header(AUTH_HEADER, adminAuthHeader()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(orderItem.getId()))
@@ -113,7 +112,7 @@ class OrderItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .quantity(2)
                 .build());
 
-        mockMvc.perform(get("/api/v1/order-items")
+        mockMvc.perform(get("/api/v1/orders/{orderId}/items", order.getId())
                         .header(AUTH_HEADER, adminAuthHeader()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
@@ -141,7 +140,7 @@ class OrderItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .quantity(5)
                 .build();
 
-        mockMvc.perform(put("/api/v1/order-items/{id}", orderItem.getId())
+        mockMvc.perform(patch("/api/v1/orders/{orderId}/items/{id}", order.getId(), orderItem.getId())
                         .header(AUTH_HEADER, adminAuthHeader())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -168,7 +167,7 @@ class OrderItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .quantity(2)
                 .build());
 
-        mockMvc.perform(delete("/api/v1/order-items/{id}", orderItem.getId())
+        mockMvc.perform(delete("/api/v1/orders/{orderId}/items/{id}", order.getId(), orderItem.getId())
                         .header(AUTH_HEADER, adminAuthHeader()))
                 .andExpect(status().isNoContent());
     }

@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -49,7 +49,7 @@ public class OrderController implements OrderControllerApi {
         return ResponseEntity.ok(orderService.getById(id));
     }
 
-    @GetMapping
+    @GetMapping(params = {"!userId"})
     @Override
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<OrderResponse>> getAll(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant createdFrom,
@@ -59,14 +59,14 @@ public class OrderController implements OrderControllerApi {
         return ResponseEntity.ok(orderService.getAll(createdFrom, createdTo, statuses, pageable));
     }
 
-    @GetMapping("/user/{userId}")
+    @GetMapping(params = "userId")
     @Override
     @PreAuthorize("hasRole('ADMIN') or @securityUtil.isOwnerByUserId(#userId)")
-    public ResponseEntity<List<OrderResponse>> getByUserId(@PathVariable Long userId) {
+    public ResponseEntity<List<OrderResponse>> getByUserId(@RequestParam Long userId) {
         return ResponseEntity.ok(orderService.getByUserId(userId));
     }
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     @Override
     @PreAuthorize("hasRole('ADMIN') or @securityUtil.isOwnerByOrderId(#id)")
     public ResponseEntity<OrderResponse> update(@PathVariable Long id,

@@ -15,9 +15,6 @@ import lombok.Setter;
 public class OrderItemUpdateRequest {
 
     @Positive
-    private Long orderId;
-
-    @Positive
     private Long itemId;
 
     @Positive

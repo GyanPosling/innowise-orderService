@@ -4,6 +4,7 @@ import com.innowise.orderservice.model.entity.OrderStatus;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
@@ -25,6 +26,7 @@ public class OrderUpdateRequest {
     private Long userId;
 
     @Email
+    @Pattern(regexp = "^\\S.*", message = "must not be blank")
     @Size(max = 100)
     private String userEmail;
 

@@ -39,7 +39,7 @@ public interface ItemControllerApi {
     })
     ResponseEntity<List<ItemResponse>> getAll();
 
-    @Operation(summary = "Update item by ID")
+    @Operation(summary = "Partially update item by ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Item updated",
                     content = @Content(mediaType = "application/json",

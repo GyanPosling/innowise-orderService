@@ -17,10 +17,6 @@ public class OrderItemCreateRequest {
 
     @NotNull
     @Positive
-    private Long orderId;
-
-    @NotNull
-    @Positive
     private Long itemId;
 
     @NotNull

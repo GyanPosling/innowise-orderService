@@ -3,7 +3,7 @@ package com.innowise.orderservice.controller;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -82,7 +82,7 @@ class ItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .price(BigDecimal.valueOf(499.99))
                 .build();
 
-        mockMvc.perform(put("/api/v1/items/{id}", item.getId())
+        mockMvc.perform(patch("/api/v1/items/{id}", item.getId())
                         .header(AUTH_HEADER, adminAuthHeader())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))

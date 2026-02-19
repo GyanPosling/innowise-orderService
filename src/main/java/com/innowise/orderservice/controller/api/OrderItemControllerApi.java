@@ -22,7 +22,7 @@ public interface OrderItemControllerApi {
                             schema = @Schema(implementation = OrderItemResponseDto.class))),
             @ApiResponse(responseCode = "400", description = "Invalid input")
     })
-    ResponseEntity<OrderItemResponseDto> create(OrderItemCreateRequest request);
+    ResponseEntity<OrderItemResponseDto> create(Long orderId, OrderItemCreateRequest request);
 
     @Operation(summary = "Get order item by ID")
     @ApiResponses(value = {
@@ -31,15 +31,15 @@ public interface OrderItemControllerApi {
                             schema = @Schema(implementation = OrderItemResponseDto.class))),
             @ApiResponse(responseCode = "404", description = "Order item not found")
     })
-    ResponseEntity<OrderItemResponseDto> getById(Long id);
+    ResponseEntity<OrderItemResponseDto> getById(Long orderId, Long itemId);
 
     @Operation(summary = "Get all order items")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Order items retrieved")
     })
-    ResponseEntity<List<OrderItemResponseDto>> getAll();
+    ResponseEntity<List<OrderItemResponseDto>> getAll(Long orderId);
 
-    @Operation(summary = "Update order item by ID")
+    @Operation(summary = "Partially update order item by ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Order item updated",
                     content = @Content(mediaType = "application/json",
@@ -47,12 +47,12 @@ public interface OrderItemControllerApi {
             @ApiResponse(responseCode = "400", description = "Invalid input"),
             @ApiResponse(responseCode = "404", description = "Order item not found")
     })
-    ResponseEntity<OrderItemResponseDto> update(Long id, OrderItemUpdateRequest request);
+    ResponseEntity<OrderItemResponseDto> update(Long orderId, Long itemId, OrderItemUpdateRequest request);
 
     @Operation(summary = "Delete order item by ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Order item deleted"),
             @ApiResponse(responseCode = "404", description = "Order item not found")
     })
-    ResponseEntity<Void> delete(Long id);
+    ResponseEntity<Void> delete(Long orderId, Long itemId);
 }

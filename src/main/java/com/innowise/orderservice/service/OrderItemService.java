@@ -17,7 +17,7 @@ public interface OrderItemService {
      * @param orderItem order item to create
      * @return created order item
      */
-    OrderItemResponseDto create(OrderItemCreateRequest orderItem);
+    OrderItemResponseDto create(Long orderId, OrderItemCreateRequest orderItem);
 
     /**
      * Returns an order item by id.
@@ -25,14 +25,14 @@ public interface OrderItemService {
      * @param id order item id
      * @return order item
      */
-    OrderItemResponseDto getById(Long id);
+    OrderItemResponseDto getById(Long orderId, Long id);
 
     /**
      * Returns all order items.
      *
      * @return list of order items
      */
-    List<OrderItemResponseDto> getAll();
+    List<OrderItemResponseDto> getAll(Long orderId);
 
     /**
      * Updates an order item by id.
@@ -41,12 +41,12 @@ public interface OrderItemService {
      * @param orderItem fields to update
      * @return updated order item
      */
-    OrderItemResponseDto update(Long id, OrderItemUpdateRequest orderItem);
+    OrderItemResponseDto update(Long orderId, Long id, OrderItemUpdateRequest orderItem);
 
     /**
      * Deletes an order item by id.
      *
      * @param id order item id
      */
-    void delete(Long id);
+    void delete(Long orderId, Long id);
 }
