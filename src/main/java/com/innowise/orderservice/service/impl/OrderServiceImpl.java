@@ -66,6 +66,7 @@ public class OrderServiceImpl implements OrderService {
         }
         Map<Long, Item> itemsById = resolveItems(request.getItems());
         Order order = orderMapper.toEntity(request, itemsById);
+        order.setOrderItems(orderMapper.toOrderItems(order, request.getItems(), itemsById));
         return enrichUser(orderMapper.toResponse(orderRepository.save(order)));
     }
 
