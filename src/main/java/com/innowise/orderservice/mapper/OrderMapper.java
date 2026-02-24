@@ -11,11 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.mapstruct.AfterMapping;
 import org.mapstruct.Context;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface OrderMapper {
@@ -57,24 +55,6 @@ public interface OrderMapper {
                 .collect(Collectors.toList());
     }
 
-    @AfterMapping
-    default void fillOrderItems(
-            @MappingTarget Order order,
-            OrderCreateRequest request,
-            @Context Map<Long, Item> itemsById
-    ) {
-        if (order == null) {
-            return;
-        }
-        if (request == null || request.getItems() == null) {
-            order.setOrderItems(new ArrayList<>());
-            return;
-        }
-        List<OrderItem> items = request.getItems().stream()
-                .map(itemRequest -> toOrderItem(order, itemRequest, itemsById))
-                .collect(Collectors.toList());
-        order.setOrderItems(items);
-    }
 }
 
 

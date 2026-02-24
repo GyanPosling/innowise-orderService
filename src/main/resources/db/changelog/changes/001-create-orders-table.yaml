@@ -29,11 +29,8 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
-                  name: deleted
-                  type: BOOLEAN
-                  defaultValueBoolean: false
-                  constraints:
-                    nullable: false
+                  name: deleted_at
+                  type: TIMESTAMP
               - column:
                   name: created_at
                   type: TIMESTAMP
@@ -56,7 +53,13 @@ databaseChangeLog:
                   name: status
         - createIndex:
             tableName: orders
-            indexName: idx_orders_deleted
+            indexName: idx_orders_deleted_at
             columns:
               - column:
-                  name: deleted
+                  name: deleted_at
+        - createIndex:
+            tableName: orders
+            indexName: idx_orders_created_at
+            columns:
+              - column:
+                  name: created_at

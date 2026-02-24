@@ -159,8 +159,7 @@ class OrderControllerIntegrationTest extends AbstractIntegrationTest {
         orderRepository.save(order);
         stubUsersByEmails(List.of("buyer20@example.com"));
 
-        mockMvc.perform(get("/api/v1/orders")
-                        .param("userId", "20")
+        mockMvc.perform(get("/api/v1/users/{userId}/orders", 20L)
                         .header(AUTH_HEADER, userAuthHeader(20L, "buyer20@example.com")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))

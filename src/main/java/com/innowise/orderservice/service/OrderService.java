@@ -32,23 +32,26 @@ public interface OrderService {
     OrderResponse getById(Long id);
 
     /**
-     * Returns non-deleted orders filtered by creation time and statuses.
+     * Returns orders filtered by creation time and statuses.
      *
      * @param createdFrom start of creation time range (inclusive)
      * @param createdTo end of creation time range (inclusive)
      * @param statuses allowed statuses
+     * @param includeDeleted whether to include soft-deleted orders
      * @param pageable paging parameters
      * @return page of orders
      */
-    Page<OrderResponse> getAll(Instant createdFrom, Instant createdTo, Collection<OrderStatus> statuses, Pageable pageable);
+    Page<OrderResponse> getAll(Instant createdFrom, Instant createdTo, Collection<OrderStatus> statuses, boolean includeDeleted,
+                               Pageable pageable);
 
     /**
-     * Returns non-deleted orders by user id.
+     * Returns orders by user id.
      *
      * @param userId user id
+     * @param includeDeleted whether to include soft-deleted orders
      * @return list of orders
      */
-    List<OrderResponse> getByUserId(Long userId);
+    List<OrderResponse> getByUserId(Long userId, boolean includeDeleted);
 
     /**
      * Updates a non-deleted order.

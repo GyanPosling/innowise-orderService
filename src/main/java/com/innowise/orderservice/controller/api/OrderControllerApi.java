@@ -46,15 +46,16 @@ public interface OrderControllerApi {
             Instant createdFrom,
             Instant createdTo,
             Collection<OrderStatus> statuses,
+            boolean includeDeleted,
             Pageable pageable
     );
 
-    @Operation(summary = "Get orders by user ID (query parameter)")
+    @Operation(summary = "Get orders by user ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Orders retrieved"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
-    ResponseEntity<List<OrderResponse>> getByUserId(Long userId);
+    ResponseEntity<List<OrderResponse>> getByUserId(Long userId, boolean includeDeleted);
 
     @Operation(summary = "Partially update order by ID")
     @ApiResponses(value = {

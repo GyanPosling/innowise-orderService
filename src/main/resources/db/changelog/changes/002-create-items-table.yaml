@@ -29,6 +29,9 @@ databaseChangeLog:
               - column:
                   name: updated_at
                   type: TIMESTAMP
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP
         - createIndex:
             tableName: items
             indexName: idx_items_name

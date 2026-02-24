@@ -23,7 +23,6 @@ import lombok.Setter;
 @Setter
 public class OrderCreateRequest {
 
-    @NotNull
     @Positive
     private Long userId;
 

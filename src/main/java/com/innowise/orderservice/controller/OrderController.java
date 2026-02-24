@@ -28,45 +28,47 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/orders")
+@RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class OrderController implements OrderControllerApi {
 
     private final OrderService orderService;
 
-    @PostMapping
+    @PostMapping("/orders")
     @Override
-    @PreAuthorize("hasRole('ADMIN') or @securityUtil.isOwnerByUserId(#request.userId)")
+    @PreAuthorize("hasRole('ADMIN') or @securityUtil.isOwnerByUserId(#request.userId != null ? #request.userId : @securityUtil.getCurrentUserId())")
     public ResponseEntity<OrderResponse> create(@Valid @RequestBody OrderCreateRequest request) {
         OrderResponse response = orderService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/orders/{id}")
     @Override
     @PreAuthorize("hasRole('ADMIN') or @securityUtil.isOwnerByOrderId(#id)")
     public ResponseEntity<OrderResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(orderService.getById(id));
     }
 
-    @GetMapping(params = {"!userId"})
+    @GetMapping("/orders")
     @Override
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<OrderResponse>> getAll(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant createdFrom,
                                                       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant createdTo,
                                                       @RequestParam(required = false) Collection<OrderStatus> statuses,
+                                                      @RequestParam(required = false, defaultValue = "false") boolean includeDeleted,
                                                       Pageable pageable) {
-        return ResponseEntity.ok(orderService.getAll(createdFrom, createdTo, statuses, pageable));
+        return ResponseEntity.ok(orderService.getAll(createdFrom, createdTo, statuses, includeDeleted, pageable));
     }
 
-    @GetMapping(params = "userId")
+    @GetMapping("/users/{userId}/orders")
     @Override
-    @PreAuthorize("hasRole('ADMIN') or @securityUtil.isOwnerByUserId(#userId)")
-    public ResponseEntity<List<OrderResponse>> getByUserId(@RequestParam Long userId) {
-        return ResponseEntity.ok(orderService.getByUserId(userId));
+    @PreAuthorize("hasRole('ADMIN') or (!#includeDeleted and @securityUtil.isOwnerByUserId(#userId))")
+    public ResponseEntity<List<OrderResponse>> getByUserId(@PathVariable Long userId,
+                                                           @RequestParam(required = false, defaultValue = "false") boolean includeDeleted) {
+        return ResponseEntity.ok(orderService.getByUserId(userId, includeDeleted));
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping("/orders/{id}")
     @Override
     @PreAuthorize("hasRole('ADMIN') or @securityUtil.isOwnerByOrderId(#id)")
     public ResponseEntity<OrderResponse> update(@PathVariable Long id,
@@ -74,7 +76,7 @@ public class OrderController implements OrderControllerApi {
         return ResponseEntity.ok(orderService.update(id, request));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/orders/{id}")
     @Override
     @PreAuthorize("hasRole('ADMIN') or @securityUtil.isOwnerByOrderId(#id)")
     public ResponseEntity<Void> delete(@PathVariable Long id) {

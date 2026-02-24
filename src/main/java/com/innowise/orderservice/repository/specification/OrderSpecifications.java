@@ -12,6 +12,10 @@ import org.springframework.data.jpa.domain.Specification;
 @NoArgsConstructor
 public final class OrderSpecifications {
 
+    public static Specification<Order> deletedAtIsNull() {
+        return (root, query, builder) -> builder.isNull(root.get("deletedAt"));
+    }
+
     public static Specification<Order> createdAtBetween(Instant from, Instant to) {
         return (root, query, builder) -> {
             if (from == null && to == null) {

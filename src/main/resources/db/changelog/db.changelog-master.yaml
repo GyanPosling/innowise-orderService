@@ -9,8 +9,5 @@ databaseChangeLog:
       file: changes/003-create-order-items-table.yaml
       relativeToChangelogFile: true
   - include:
-      file: changes/004-add-deleted-at.yaml
-      relativeToChangelogFile: true
-  - include:
       file: changes/005-add-order-user-email.yaml
       relativeToChangelogFile: true

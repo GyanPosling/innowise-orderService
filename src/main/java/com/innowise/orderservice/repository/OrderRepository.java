@@ -10,6 +10,8 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
 
     List<Order> findAllByUserId(Long userId);
 
+    List<Order> findAllByUserIdAndDeletedAtIsNull(Long userId);
+
     Optional<Order> findByIdAndDeletedAtIsNull(Long id);
 }
 

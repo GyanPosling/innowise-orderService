@@ -14,7 +14,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.innowise.orderservice.client.UserServiceClient;
 import com.innowise.orderservice.config.security.SecurityUtil;
 import com.innowise.orderservice.exception.BadRequestException;
 import com.innowise.orderservice.exception.ItemNotFoundException;
@@ -32,6 +31,7 @@ import com.innowise.orderservice.model.entity.OrderItem;
 import com.innowise.orderservice.model.entity.OrderStatus;
 import com.innowise.orderservice.repository.ItemRepository;
 import com.innowise.orderservice.repository.OrderRepository;
+import com.innowise.orderservice.service.UserLookupService;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -60,7 +60,7 @@ class OrderServiceImplTest {
     private OrderMapper orderMapper;
 
     @Mock
-    private UserServiceClient userServiceClient;
+    private UserLookupService userLookupService;
 
     @Mock
     private SecurityUtil securityUtil;
@@ -107,7 +107,7 @@ class OrderServiceImplTest {
         when(orderMapper.toEntity(eq(request), anyMap())).thenReturn(order);
         when(orderRepository.save(order)).thenReturn(order);
         when(orderMapper.toResponse(order)).thenReturn(response);
-        when(userServiceClient.getUserByEmail("current@example.com")).thenReturn(userInfo);
+        when(userLookupService.getUserByEmail("current@example.com")).thenReturn(userInfo);
 
         OrderResponse result = orderService.create(request);
 
@@ -171,7 +171,7 @@ class OrderServiceImplTest {
 
         when(orderRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(order));
         when(orderMapper.toResponse(order)).thenReturn(response);
-        when(userServiceClient.getUserByEmail("user@example.com")).thenReturn(userInfo);
+        when(userLookupService.getUserByEmail("user@example.com")).thenReturn(userInfo);
 
         OrderResponse result = orderService.getById(1L);
 
@@ -193,7 +193,7 @@ class OrderServiceImplTest {
         OrderResponse result = orderService.getById(1L);
 
         assertEquals(" ", result.getUserEmail());
-        verify(userServiceClient, never()).getUserByEmail(anyString());
+        verify(userLookupService, never()).getUserByEmail(anyString());
     }
 
     @Test
@@ -210,9 +210,9 @@ class OrderServiceImplTest {
         when(orderRepository.findAll(org.mockito.ArgumentMatchers.<Specification<Order>>any(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(order), pageable, 1));
         when(orderMapper.toResponse(order)).thenReturn(response);
-        when(userServiceClient.getUsersByEmails(anyList())).thenReturn(List.of(userInfo));
+        when(userLookupService.getUsersByEmails(anyList())).thenReturn(List.of(userInfo));
 
-        OrderResponse result = orderService.getAll(Instant.now(), Instant.now(), List.of(OrderStatus.NEW), pageable)
+        OrderResponse result = orderService.getAll(Instant.now(), Instant.now(), List.of(OrderStatus.NEW), false, pageable)
                 .getContent()
                 .get(0);
 
@@ -230,11 +230,11 @@ class OrderServiceImplTest {
                 .build();
         UserInfoResponse userInfo = UserInfoResponse.builder().email("user@example.com").build();
 
-        when(orderRepository.findAllByUserId(7L)).thenReturn(List.of(order));
+        when(orderRepository.findAllByUserIdAndDeletedAtIsNull(7L)).thenReturn(List.of(order));
         when(orderMapper.toResponse(order)).thenReturn(response);
-        when(userServiceClient.getUsersByEmails(anyList())).thenReturn(List.of(userInfo));
+        when(userLookupService.getUsersByEmails(anyList())).thenReturn(List.of(userInfo));
 
-        List<OrderResponse> results = orderService.getByUserId(7L);
+        List<OrderResponse> results = orderService.getByUserId(7L, false);
 
         assertEquals(1, results.size());
         assertEquals("user@example.com", results.get(0).getUser().getEmail());
@@ -346,7 +346,7 @@ class OrderServiceImplTest {
 
         when(orderRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(order));
         when(orderMapper.toResponse(order)).thenReturn(response);
-        when(userServiceClient.getUserByEmail("user@example.com"))
+        when(userLookupService.getUserByEmail("user@example.com"))
                 .thenThrow(new ServiceUnavailableException("User service is unavailable", new RuntimeException()));
 
         assertThrows(ServiceUnavailableException.class, () -> orderService.getById(1L));
