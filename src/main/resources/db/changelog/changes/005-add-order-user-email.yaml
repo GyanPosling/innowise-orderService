@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 5
+      author: orderservice
+      changes:
+        - addColumn:
+            tableName: orders
+            columns:
+              - column:
+                  name: user_email
+                  type: VARCHAR(100)
+        - createIndex:
+            tableName: orders
+            indexName: idx_orders_user_email
+            columns:
+              - column:
+                  name: user_email

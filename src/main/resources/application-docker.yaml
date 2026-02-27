@@ -1,0 +1,10 @@
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+authservice:
+  base-url: ${AUTHSERVICE_BASE_URL:http://host.docker.internal:8082}
+
+userservice:
+  base-url: ${USERSERVICE_BASE_URL:http://host.docker.internal:8081}

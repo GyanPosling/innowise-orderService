@@ -1,0 +1,10 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+
+authservice:
+  base-url: http://localhost:8082
+
+userservice:
+  base-url: http://localhost:8081
