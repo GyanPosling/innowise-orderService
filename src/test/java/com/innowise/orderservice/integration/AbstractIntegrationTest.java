@@ -15,14 +15,11 @@ import com.innowise.orderservice.TestcontainersConfiguration;
 import com.innowise.orderservice.config.TestJacksonConfig;
 import com.innowise.orderservice.model.dto.response.UserInfoResponse;
 import com.innowise.orderservice.model.entity.Role;
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.util.Date;
+import org.springframework.http.HttpHeaders;
 import java.util.List;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -34,15 +31,15 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
-
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @Import({TestcontainersConfiguration.class, TestJacksonConfig.class})
 public abstract class AbstractIntegrationTest {
 
-    protected static final String AUTH_HEADER = "Authorization";
+    protected static final String USER_ID_HEADER = "X-USER-ID";
+    protected static final String USER_ROLE_HEADER = "X-USER-ROLE";
+    protected static final String USER_EMAIL_HEADER = "X-USER-EMAIL";
+    protected static final String USERNAME_HEADER = "X-USER-NAME";
 
     private static final WireMockServer WIRE_MOCK_SERVER =
             new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort());
@@ -61,9 +58,6 @@ public abstract class AbstractIntegrationTest {
 
     @Autowired
     private WebApplicationContext webApplicationContext;
-
-    @Value("${jwt.secret}")
-    private String jwtSecret;
 
     protected JdbcTemplate jdbcTemplate;
 
@@ -84,12 +78,12 @@ public abstract class AbstractIntegrationTest {
         jdbcTemplate.update("DELETE FROM items");
     }
 
-    protected String adminAuthHeader() {
-        return "Bearer " + buildToken(1L, "admin@example.com", Role.ADMIN);
+    protected HttpHeaders adminHeaders() {
+        return buildHeaders(1L, "admin@example.com", Role.ADMIN);
     }
 
-    protected String userAuthHeader(Long userId, String email) {
-        return "Bearer " + buildToken(userId, email, Role.USER);
+    protected HttpHeaders userHeaders(Long userId, String email) {
+        return buildHeaders(userId, email, Role.USER);
     }
 
     protected void stubUserByEmail(String email) {
@@ -128,16 +122,12 @@ public abstract class AbstractIntegrationTest {
         }
     }
 
-    private String buildToken(Long userId, String email, Role role) {
-        Instant now = Instant.now();
-        return Jwts.builder()
-                .setSubject(email)
-                .claim("email", email)
-                .claim("userId", userId)
-                .claim("role", role.name())
-                .setIssuedAt(Date.from(now))
-                .setExpiration(Date.from(now.plusSeconds(3600)))
-                .signWith(Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8)))
-                .compact();
+    private HttpHeaders buildHeaders(Long userId, String email, Role role) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(USER_ID_HEADER, String.valueOf(userId));
+        headers.add(USER_ROLE_HEADER, role.name());
+        headers.add(USER_EMAIL_HEADER, email);
+        headers.add(USERNAME_HEADER, email);
+        return headers;
     }
 }

@@ -15,6 +15,10 @@ public class OrderNotFoundException extends ResourceNotFoundException {
         super("Order not found with id: " + id);
     }
 
+    public OrderNotFoundException(String message) {
+        super(message);
+    }
+
     public OrderNotFoundException(String message, Throwable cause) {
         super(message, cause);
     }

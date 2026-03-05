@@ -15,6 +15,10 @@ public class ItemNotFoundException extends ResourceNotFoundException {
         super("Item not found with id: " + id);
     }
 
+    public ItemNotFoundException(String message) {
+        super(message);
+    }
+
     public ItemNotFoundException(String message, Throwable cause) {
         super(message, cause);
     }
