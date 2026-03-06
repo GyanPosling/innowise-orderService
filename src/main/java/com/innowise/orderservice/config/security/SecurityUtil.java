@@ -22,6 +22,9 @@ public class SecurityUtil {
             return null;
         }
         Object details = auth.getDetails();
+        if (details instanceof String stringId) {
+            return Long.parseLong(stringId);
+        }
         if (details instanceof Long userId) {
             return userId;
         }

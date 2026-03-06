@@ -52,7 +52,7 @@ class OrderItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .build();
 
         mockMvc.perform(post("/api/v1/orders/{orderId}/items", order.getId())
-                        .header(AUTH_HEADER, adminAuthHeader())
+                        .headers(adminHeaders("POST", "/api/v1/orders/" + order.getId() + "/items"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -81,7 +81,7 @@ class OrderItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .build());
 
         mockMvc.perform(get("/api/v1/orders/{orderId}/items/{id}", order.getId(), orderItem.getId())
-                        .header(AUTH_HEADER, adminAuthHeader()))
+                        .headers(adminHeaders("GET", "/api/v1/orders/" + order.getId() + "/items/" + orderItem.getId())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(orderItem.getId()))
                 .andExpect(jsonPath("$.orderId").value(order.getId()))
@@ -113,7 +113,7 @@ class OrderItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .build());
 
         mockMvc.perform(get("/api/v1/orders/{orderId}/items", order.getId())
-                        .header(AUTH_HEADER, adminAuthHeader()))
+                        .headers(adminHeaders("GET", "/api/v1/orders/" + order.getId() + "/items")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
     }
@@ -141,7 +141,7 @@ class OrderItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .build();
 
         mockMvc.perform(patch("/api/v1/orders/{orderId}/items/{id}", order.getId(), orderItem.getId())
-                        .header(AUTH_HEADER, adminAuthHeader())
+                        .headers(adminHeaders("PATCH", "/api/v1/orders/" + order.getId() + "/items/" + orderItem.getId()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -168,7 +168,7 @@ class OrderItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .build());
 
         mockMvc.perform(delete("/api/v1/orders/{orderId}/items/{id}", order.getId(), orderItem.getId())
-                        .header(AUTH_HEADER, adminAuthHeader()))
+                        .headers(adminHeaders("DELETE", "/api/v1/orders/" + order.getId() + "/items/" + orderItem.getId())))
                 .andExpect(status().isNoContent());
     }
 }
