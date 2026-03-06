@@ -30,7 +30,7 @@ class ItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .build();
 
         mockMvc.perform(post("/api/v1/items")
-                        .headers(adminHeaders())
+                        .headers(adminHeaders("POST", "/api/v1/items"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -47,7 +47,7 @@ class ItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .build());
 
         mockMvc.perform(get("/api/v1/items/{id}", item.getId())
-                        .headers(adminHeaders()))
+                        .headers(adminHeaders("GET", "/api/v1/items/" + item.getId())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(item.getId()))
                 .andExpect(jsonPath("$.name").value("Keyboard"))
@@ -66,7 +66,7 @@ class ItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .build());
 
         mockMvc.perform(get("/api/v1/items")
-                        .headers(adminHeaders()))
+                        .headers(adminHeaders("GET", "/api/v1/items")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
     }
@@ -83,7 +83,7 @@ class ItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .build();
 
         mockMvc.perform(patch("/api/v1/items/{id}", item.getId())
-                        .headers(adminHeaders())
+                        .headers(adminHeaders("PATCH", "/api/v1/items/" + item.getId()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -100,7 +100,7 @@ class ItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .build());
 
         mockMvc.perform(delete("/api/v1/items/{id}", item.getId())
-                        .headers(adminHeaders()))
+                        .headers(adminHeaders("DELETE", "/api/v1/items/" + item.getId())))
                 .andExpect(status().isNoContent());
     }
 }

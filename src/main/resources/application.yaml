@@ -17,6 +17,12 @@ spring:
 jwt:
   secret: ${JWT_SECRET}
 
+orderservice:
+  internal-signing-secret: ${ORDERSERVICE_INTERNAL_SIGNING_SECRET}
+
+internal:
+  ttl-seconds: ${INTERNAL_TTL_SECONDS:60}
+
 userservice:
   base-url: ${USERSERVICE_BASE_URL:http://localhost:8081}
 

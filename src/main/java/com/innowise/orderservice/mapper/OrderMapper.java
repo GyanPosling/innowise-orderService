@@ -18,9 +18,11 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface OrderMapper {
 
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "orderItems", ignore = true)
     Order toEntity(OrderCreateRequest request, @Context Map<Long, Item> itemsById);
 
+    @Mapping(target = "user", ignore = true)
     @Mapping(target = "items", source = "orderItems")
     OrderResponse toResponse(Order order);
 
