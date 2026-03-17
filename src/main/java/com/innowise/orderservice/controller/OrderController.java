@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -63,7 +64,7 @@ public class OrderController implements OrderControllerApi {
     @GetMapping("/users/{userId}/orders")
     @Override
     @PreAuthorize("hasRole('ADMIN') or (!#includeDeleted and @securityUtil.isOwnerByUserId(#userId))")
-    public ResponseEntity<List<OrderResponse>> getByUserId(@PathVariable Long userId,
+    public ResponseEntity<List<OrderResponse>> getByUserId(@PathVariable UUID userId,
                                                            @RequestParam(required = false, defaultValue = "false") boolean includeDeleted) {
         return ResponseEntity.ok(orderService.getByUserId(userId, includeDeleted));
     }

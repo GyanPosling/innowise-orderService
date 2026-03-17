@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import lombok.AllArgsConstructor;
@@ -60,7 +61,7 @@ public class OrderServiceImpl implements OrderService {
                 throw new BadRequestException("User id is required for admin");
             }
         } else {
-            Long currentUserId = securityUtil.getCurrentUserId();
+            UUID currentUserId = securityUtil.getCurrentUserId();
             if (currentUserId == null) {
                 throw new BadRequestException("User id is missing in token");
             }
@@ -102,7 +103,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<OrderResponse> getByUserId(Long userId, boolean includeDeleted) {
+    public List<OrderResponse> getByUserId(UUID userId, boolean includeDeleted) {
         if (includeDeleted && !securityUtil.isAdmin()) {
             throw new AccessDeniedException("Access denied");
         }

@@ -10,6 +10,7 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,8 +24,7 @@ import lombok.Setter;
 @Setter
 public class OrderCreateRequest {
 
-    @Positive
-    private Long userId;
+    private UUID userId;
 
     @NotBlank
     @Email

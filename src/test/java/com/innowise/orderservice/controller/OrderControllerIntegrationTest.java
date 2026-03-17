@@ -20,6 +20,7 @@ import com.innowise.orderservice.repository.OrderRepository;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -34,6 +35,7 @@ class OrderControllerIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void create_shouldReturnCreatedOrder() throws Exception {
+        UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000010");
         Item item = itemRepository.save(Item.builder()
                 .name("Phone")
                 .price(BigDecimal.valueOf(500))
@@ -41,7 +43,7 @@ class OrderControllerIntegrationTest extends AbstractIntegrationTest {
         stubUserByEmail("buyer@example.com");
 
         OrderCreateRequest request = OrderCreateRequest.builder()
-                .userId(10L)
+                .userId(userId)
                 .userEmail("buyer@example.com")
                 .status(OrderStatus.NEW)
                 .totalPrice(BigDecimal.valueOf(500))
@@ -65,12 +67,13 @@ class OrderControllerIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void getById_shouldReturnOrder() throws Exception {
+        UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000011");
         Item item = itemRepository.save(Item.builder()
                 .name("Headphones")
                 .price(BigDecimal.valueOf(150))
                 .build());
         Order order = Order.builder()
-                .userId(11L)
+                .userId(userId)
                 .userEmail("buyer11@example.com")
                 .status(OrderStatus.NEW)
                 .totalPrice(BigDecimal.valueOf(150))
@@ -95,13 +98,15 @@ class OrderControllerIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void getAll_shouldReturnPage() throws Exception {
+        UUID firstUserId = UUID.fromString("00000000-0000-0000-0000-000000000012");
+        UUID secondUserId = UUID.fromString("00000000-0000-0000-0000-000000000013");
         Item item = itemRepository.save(Item.builder()
                 .name("Tablet")
                 .price(BigDecimal.valueOf(300))
                 .build());
 
         Order orderOne = Order.builder()
-                .userId(12L)
+                .userId(firstUserId)
                 .userEmail("buyer12@example.com")
                 .status(OrderStatus.NEW)
                 .totalPrice(BigDecimal.valueOf(300))
@@ -115,7 +120,7 @@ class OrderControllerIntegrationTest extends AbstractIntegrationTest {
         orderRepository.save(orderOne);
 
         Order orderTwo = Order.builder()
-                .userId(13L)
+                .userId(secondUserId)
                 .userEmail("buyer13@example.com")
                 .status(OrderStatus.PAID)
                 .totalPrice(BigDecimal.valueOf(600))
@@ -140,12 +145,13 @@ class OrderControllerIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void getByUserId_shouldReturnOrdersForUser() throws Exception {
+        UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000020");
         Item item = itemRepository.save(Item.builder()
                 .name("Speaker")
                 .price(BigDecimal.valueOf(75))
                 .build());
         Order order = Order.builder()
-                .userId(20L)
+                .userId(userId)
                 .userEmail("buyer20@example.com")
                 .status(OrderStatus.NEW)
                 .totalPrice(BigDecimal.valueOf(75))
@@ -159,8 +165,8 @@ class OrderControllerIntegrationTest extends AbstractIntegrationTest {
         orderRepository.save(order);
         stubUsersByEmails(List.of("buyer20@example.com"));
 
-        mockMvc.perform(get("/api/v1/users/{userId}/orders", 20L)
-                        .header(AUTH_HEADER, userAuthHeader(20L, "buyer20@example.com")))
+        mockMvc.perform(get("/api/v1/users/{userId}/orders", userId)
+                        .header(AUTH_HEADER, userAuthHeader(userId, "buyer20@example.com")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].userEmail").value("buyer20@example.com"));
@@ -168,6 +174,7 @@ class OrderControllerIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void update_shouldModifyOrder() throws Exception {
+        UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000014");
         Item item = itemRepository.save(Item.builder()
                 .name("Watch")
                 .price(BigDecimal.valueOf(200))
@@ -177,7 +184,7 @@ class OrderControllerIntegrationTest extends AbstractIntegrationTest {
                 .price(BigDecimal.valueOf(250))
                 .build());
         Order order = Order.builder()
-                .userId(14L)
+                .userId(userId)
                 .userEmail("buyer14@example.com")
                 .status(OrderStatus.NEW)
                 .totalPrice(BigDecimal.valueOf(200))
@@ -212,8 +219,9 @@ class OrderControllerIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void delete_shouldRemoveOrder() throws Exception {
+        UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000015");
         Order order = orderRepository.save(Order.builder()
-                .userId(15L)
+                .userId(userId)
                 .userEmail("buyer15@example.com")
                 .status(OrderStatus.NEW)
                 .totalPrice(BigDecimal.valueOf(100))

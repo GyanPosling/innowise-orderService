@@ -9,6 +9,7 @@ import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
+import java.util.UUID;
 import java.util.function.Function;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -42,8 +43,11 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public Long extractUserId(String token) {
-        return extractClaim(token, claims -> claims.get("userId", Long.class));
+    public UUID extractUserId(String token) {
+        return extractClaim(token, claims -> {
+            String userId = claims.get("userId", String.class);
+            return userId == null ? null : UUID.fromString(userId);
+        });
     }
 
     @Override

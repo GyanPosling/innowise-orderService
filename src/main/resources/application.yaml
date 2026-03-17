@@ -11,11 +11,43 @@ spring:
       ddl-auto: none
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      acks: all
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+    consumer:
+      group-id: ${SPRING_KAFKA_CONSUMER_GROUP_ID:orderservice}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.innowise.orderservice.messaging.event
+        spring.json.value.default.type: com.innowise.orderservice.messaging.event.PaymentCreatedEvent
+    listener:
+      ack-mode: record
+    properties:
+      spring.json.add.type.headers: false
+      spring.json.use.type.headers: false
   config:
     import: optional:file:.env[.properties]
 
 jwt:
   secret: ${JWT_SECRET}
+
+app:
+  kafka:
+    topics:
+      payment-created: ${PAYMENT_CREATED_TOPIC:create-payment}
+      payment-created-dlq: ${PAYMENT_CREATED_DLQ_TOPIC:create-payment.dlq}
+    consumer:
+      payment-created:
+        retry:
+          initial-interval-ms: ${PAYMENT_EVENT_RETRY_INITIAL_INTERVAL_MS:1000}
+          multiplier: ${PAYMENT_EVENT_RETRY_MULTIPLIER:2.0}
+          max-interval-ms: ${PAYMENT_EVENT_RETRY_MAX_INTERVAL_MS:10000}
+          max-attempts: ${PAYMENT_EVENT_RETRY_MAX_ATTEMPTS:3}
 
 userservice:
   base-url: ${USERSERVICE_BASE_URL:http://localhost:8081}

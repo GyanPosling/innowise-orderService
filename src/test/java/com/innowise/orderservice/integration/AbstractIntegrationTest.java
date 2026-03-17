@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,6 +71,8 @@ public abstract class AbstractIntegrationTest {
     @DynamicPropertySource
     static void registerProperties(DynamicPropertyRegistry registry) {
         registry.add("userservice.base-url", WIRE_MOCK_SERVER::baseUrl);
+        registry.add("spring.kafka.bootstrap-servers",
+                () -> TestcontainersConfiguration.getKafkaContainer().getBootstrapServers());
     }
 
     @BeforeEach
@@ -85,16 +88,16 @@ public abstract class AbstractIntegrationTest {
     }
 
     protected String adminAuthHeader() {
-        return "Bearer " + buildToken(1L, "admin@example.com", Role.ADMIN);
+        return "Bearer " + buildToken(UUID.fromString("00000000-0000-0000-0000-000000000001"), "admin@example.com", Role.ADMIN);
     }
 
-    protected String userAuthHeader(Long userId, String email) {
+    protected String userAuthHeader(UUID userId, String email) {
         return "Bearer " + buildToken(userId, email, Role.USER);
     }
 
     protected void stubUserByEmail(String email) {
         UserInfoResponse response = UserInfoResponse.builder()
-                .id(1)
+                .id(UUID.fromString("00000000-0000-0000-0000-000000000101"))
                 .email(email)
                 .name("Test")
                 .surname("User")
@@ -112,7 +115,7 @@ public abstract class AbstractIntegrationTest {
     protected void stubUsersByEmails(List<String> emails) {
         List<UserInfoResponse> responses = emails.stream()
                 .map(email -> UserInfoResponse.builder()
-                        .id(1)
+                        .id(UUID.fromString("00000000-0000-0000-0000-000000000101"))
                         .email(email)
                         .name("Test")
                         .surname("User")
@@ -128,12 +131,12 @@ public abstract class AbstractIntegrationTest {
         }
     }
 
-    private String buildToken(Long userId, String email, Role role) {
+    private String buildToken(UUID userId, String email, Role role) {
         Instant now = Instant.now();
         return Jwts.builder()
                 .setSubject(email)
                 .claim("email", email)
-                .claim("userId", userId)
+                .claim("userId", userId.toString())
                 .claim("role", role.name())
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(now.plusSeconds(3600)))

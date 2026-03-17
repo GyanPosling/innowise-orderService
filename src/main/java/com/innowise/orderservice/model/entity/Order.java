@@ -14,6 +14,7 @@ import jakarta.persistence.Enumerated;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -39,7 +40,7 @@ public class Order extends Auditable {
     private Long id;
 
     @Column(name = "user_id", nullable = false)
-    private Long userId;
+    private UUID userId;
 
     @Column(name = "user_email", length = 100)
     private String userEmail;
@@ -56,4 +57,3 @@ public class Order extends Auditable {
     @Builder.Default
     private List<OrderItem> orderItems = new ArrayList<>();
 }
-
