@@ -77,7 +77,6 @@ class PaymentEventConsumerIntegrationTest extends AbstractIntegrationTest {
             if (currentStatus == OrderStatus.PAID || currentStatus == OrderStatus.CANCELLED) {
                 return currentStatus;
             }
-            Thread.sleep(200);
         }
         return orderRepository.findByIdAndDeletedAtIsNull(orderId)
                 .map(Order::getStatus)
