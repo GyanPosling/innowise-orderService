@@ -5,26 +5,52 @@ import com.innowise.orderservice.exception.OrderStatusTransitionException;
 import com.innowise.orderservice.messaging.event.PaymentCreatedEvent;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.ConsumerFactory;
+import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.support.ExponentialBackOffWithMaxRetries;
+import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 import org.springframework.kafka.support.serializer.JacksonJsonSerializer;
 
 @Configuration
 @EnableKafka
 public class KafkaConfig {
+
+    @Bean
+    public NewTopic paymentCreatedTopic(
+            @Value("${app.kafka.topics.payment-created}") String paymentCreatedTopic
+    ) {
+        return TopicBuilder.name(paymentCreatedTopic)
+                .partitions(1)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
+    public NewTopic paymentCreatedDlqTopic(
+            @Value("${app.kafka.topics.payment-created-dlq}") String paymentCreatedDlqTopic
+    ) {
+        return TopicBuilder.name(paymentCreatedDlqTopic)
+                .partitions(1)
+                .replicas(1)
+                .build();
+    }
 
     @Bean
     public ProducerFactory<String, PaymentCreatedEvent> paymentEventProducerFactory(
@@ -45,6 +71,29 @@ public class KafkaConfig {
             ProducerFactory<String, PaymentCreatedEvent> paymentEventProducerFactory
     ) {
         return new KafkaTemplate<>(paymentEventProducerFactory);
+    }
+
+    @Bean
+    public ConsumerFactory<String, PaymentCreatedEvent> paymentEventConsumerFactory(
+            @Value("${spring.kafka.bootstrap-servers}") String bootstrapServers,
+            @Value("${spring.kafka.consumer.group-id}") String groupId,
+            @Value("${spring.kafka.consumer.auto-offset-reset:earliest}") String autoOffsetReset
+    ) {
+        Map<String, Object> consumerProperties = new HashMap<>();
+        consumerProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        consumerProperties.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        consumerProperties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
+        consumerProperties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        consumerProperties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JacksonJsonDeserializer.class);
+        consumerProperties.put(JacksonJsonDeserializer.TRUSTED_PACKAGES, "com.innowise.orderservice.messaging.event");
+        consumerProperties.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE, PaymentCreatedEvent.class.getName());
+        consumerProperties.put(JacksonJsonDeserializer.USE_TYPE_INFO_HEADERS, false);
+
+        return new DefaultKafkaConsumerFactory<>(
+                consumerProperties,
+                new StringDeserializer(),
+                new JacksonJsonDeserializer<>(PaymentCreatedEvent.class, false)
+        );
     }
 
     @Bean
