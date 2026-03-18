@@ -68,7 +68,7 @@ class PaymentEventConsumerIntegrationTest extends AbstractIntegrationTest {
         assertThat(awaitStatus(order.getId())).isEqualTo(OrderStatus.CANCELLED);
     }
 
-    private OrderStatus awaitStatus(Long orderId) throws InterruptedException {
+    private OrderStatus awaitStatus(Long orderId) {
         Instant deadline = Instant.now().plusSeconds(10);
         while (Instant.now().isBefore(deadline)) {
             OrderStatus currentStatus = orderRepository.findByIdAndDeletedAtIsNull(orderId)
