@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.innowise.orderservice.TestcontainersConfiguration;
 import com.innowise.orderservice.config.TestJacksonConfig;
 import com.innowise.orderservice.model.dto.response.UserInfoResponse;
 import com.innowise.orderservice.model.entity.Role;
@@ -26,7 +27,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -34,18 +34,15 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@EmbeddedKafka(
-        partitions = 1,
-        topics = {"create-payment", "create-payment.dlq"},
-        bootstrapServersProperty = "spring.kafka.bootstrap-servers"
-)
-@Import(TestJacksonConfig.class)
+@Testcontainers(disabledWithoutDocker = true)
+@Import({TestJacksonConfig.class, TestcontainersConfiguration.class})
 public abstract class AbstractIntegrationTest {
 
     protected static final String AUTH_HEADER = "Authorization";
@@ -76,6 +73,10 @@ public abstract class AbstractIntegrationTest {
     @DynamicPropertySource
     static void registerProperties(DynamicPropertyRegistry registry) {
         registry.add("userservice.base-url", WIRE_MOCK_SERVER::baseUrl);
+        registry.add(
+                "spring.kafka.bootstrap-servers",
+                () -> TestcontainersConfiguration.getKafkaContainer().getBootstrapServers()
+        );
     }
 
     @BeforeEach

@@ -2,17 +2,23 @@ package com.innowise.orderservice;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.context.annotation.Import;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@EmbeddedKafka(
-		partitions = 1,
-		topics = {"create-payment", "create-payment.dlq"},
-		bootstrapServersProperty = "spring.kafka.bootstrap-servers"
-)
+@Import(TestcontainersConfiguration.class)
 class OrderserviceApplicationTests {
+
+	@DynamicPropertySource
+	static void registerProperties(DynamicPropertyRegistry registry) {
+		registry.add(
+				"spring.kafka.bootstrap-servers",
+				() -> TestcontainersConfiguration.getKafkaContainer().getBootstrapServers()
+		);
+	}
 
 	@Test
 	void contextLoads() {
