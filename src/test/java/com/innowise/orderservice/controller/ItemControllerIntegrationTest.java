@@ -30,7 +30,7 @@ class ItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .build();
 
         mockMvc.perform(post("/api/v1/items")
-                        .header(AUTH_HEADER, adminAuthHeader())
+                        .with(adminAuthHeader())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -47,7 +47,7 @@ class ItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .build());
 
         mockMvc.perform(get("/api/v1/items/{id}", item.getId())
-                        .header(AUTH_HEADER, adminAuthHeader()))
+                        .with(adminAuthHeader()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(item.getId()))
                 .andExpect(jsonPath("$.name").value("Keyboard"))
@@ -66,7 +66,7 @@ class ItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .build());
 
         mockMvc.perform(get("/api/v1/items")
-                        .header(AUTH_HEADER, adminAuthHeader()))
+                        .with(adminAuthHeader()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
     }
@@ -83,7 +83,7 @@ class ItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .build();
 
         mockMvc.perform(patch("/api/v1/items/{id}", item.getId())
-                        .header(AUTH_HEADER, adminAuthHeader())
+                        .with(adminAuthHeader())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -100,7 +100,7 @@ class ItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .build());
 
         mockMvc.perform(delete("/api/v1/items/{id}", item.getId())
-                        .header(AUTH_HEADER, adminAuthHeader()))
+                        .with(adminAuthHeader()))
                 .andExpect(status().isNoContent());
     }
 }

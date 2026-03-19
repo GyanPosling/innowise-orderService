@@ -36,6 +36,12 @@ spring:
 jwt:
   secret: ${JWT_SECRET}
 
+gateway:
+  internal-signing-secret: ${GATEWAY_INTERNAL_SIGNING_SECRET}
+
+internal:
+  ttl-seconds: ${INTERNAL_TTL_SECONDS:60}
+
 app:
   kafka:
     topics:

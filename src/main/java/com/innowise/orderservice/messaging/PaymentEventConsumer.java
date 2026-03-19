@@ -19,7 +19,8 @@ public class PaymentEventConsumer {
             containerFactory = "paymentEventKafkaListenerContainerFactory"
     )
     public void handlePaymentCreatedEvent(PaymentCreatedEvent event) {
-        log.info("Received payment event for orderId={}, status={}", event.getOrderId(), event.getStatus());
+        log.info("Received payment event for paymentId={}, orderId={}, status={}, version={}",
+                event.getPaymentId(), event.getOrderId(), event.getStatus(), event.getEventVersion());
         paymentEventService.handlePaymentCreatedEvent(event);
     }
 }

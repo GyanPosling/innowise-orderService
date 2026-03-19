@@ -16,6 +16,8 @@ import lombok.Setter;
 @Setter
 public class PaymentCreatedEvent {
 
+    public static final int CURRENT_VERSION = 1;
+
     private String paymentId;
 
     private Long orderId;
@@ -27,4 +29,6 @@ public class PaymentCreatedEvent {
     private BigDecimal paymentAmount;
 
     private Instant timestamp;
+
+    private Integer eventVersion;
 }

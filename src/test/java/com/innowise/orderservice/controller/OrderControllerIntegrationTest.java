@@ -54,7 +54,7 @@ class OrderControllerIntegrationTest extends AbstractIntegrationTest {
                 .build();
 
         mockMvc.perform(post("/api/v1/orders")
-                        .header(AUTH_HEADER, adminAuthHeader())
+                        .with(adminAuthHeader())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -88,7 +88,7 @@ class OrderControllerIntegrationTest extends AbstractIntegrationTest {
         stubUserByEmail("buyer11@example.com");
 
         mockMvc.perform(get("/api/v1/orders/{id}", saved.getId())
-                        .header(AUTH_HEADER, adminAuthHeader()))
+                        .with(adminAuthHeader()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(saved.getId()))
                 .andExpect(jsonPath("$.userEmail").value("buyer11@example.com"))
@@ -138,7 +138,7 @@ class OrderControllerIntegrationTest extends AbstractIntegrationTest {
         mockMvc.perform(get("/api/v1/orders")
                         .param("page", "0")
                         .param("size", "10")
-                        .header(AUTH_HEADER, adminAuthHeader()))
+                        .with(adminAuthHeader()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(2));
     }
@@ -166,7 +166,7 @@ class OrderControllerIntegrationTest extends AbstractIntegrationTest {
         stubUsersByEmails(List.of("buyer20@example.com"));
 
         mockMvc.perform(get("/api/v1/users/{userId}/orders", userId)
-                        .header(AUTH_HEADER, userAuthHeader(userId, "buyer20@example.com")))
+                        .with(userAuthHeader(userId, "buyer20@example.com")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].userEmail").value("buyer20@example.com"));
@@ -208,7 +208,7 @@ class OrderControllerIntegrationTest extends AbstractIntegrationTest {
                 .build();
 
         mockMvc.perform(patch("/api/v1/orders/{id}", saved.getId())
-                        .header(AUTH_HEADER, adminAuthHeader())
+                        .with(adminAuthHeader())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -228,7 +228,7 @@ class OrderControllerIntegrationTest extends AbstractIntegrationTest {
                 .build());
 
         mockMvc.perform(delete("/api/v1/orders/{id}", order.getId())
-                        .header(AUTH_HEADER, adminAuthHeader()))
+                        .with(adminAuthHeader()))
                 .andExpect(status().isNoContent());
     }
 }

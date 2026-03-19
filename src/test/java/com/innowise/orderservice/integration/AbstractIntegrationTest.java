@@ -16,11 +16,15 @@ import com.innowise.orderservice.config.TestJacksonConfig;
 import com.innowise.orderservice.model.dto.response.UserInfoResponse;
 import com.innowise.orderservice.model.entity.Role;
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
-import java.util.Date;
+import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 import javax.sql.DataSource;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,13 +35,11 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -45,7 +47,13 @@ import io.jsonwebtoken.security.Keys;
 @Import({TestJacksonConfig.class, TestcontainersConfiguration.class})
 public abstract class AbstractIntegrationTest {
 
-    protected static final String AUTH_HEADER = "Authorization";
+    private static final String USER_ID_HEADER = "X-USER-ID";
+    private static final String USER_ROLE_HEADER = "X-USER-ROLE";
+    private static final String USER_EMAIL_HEADER = "X-USER-EMAIL";
+    private static final String USERNAME_HEADER = "X-USER-NAME";
+    private static final String TS_HEADER = "X-TS";
+    private static final String SIGN_HEADER = "X-SIGN";
+    private static final String SIGN_ALGORITHM = "HmacSHA256";
 
     private static final WireMockServer WIRE_MOCK_SERVER =
             new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort());
@@ -65,8 +73,8 @@ public abstract class AbstractIntegrationTest {
     @Autowired
     private WebApplicationContext webApplicationContext;
 
-    @Value("${jwt.secret}")
-    private String jwtSecret;
+    @Value("${gateway.internal-signing-secret}")
+    private String internalSecret;
 
     protected JdbcTemplate jdbcTemplate;
 
@@ -87,16 +95,17 @@ public abstract class AbstractIntegrationTest {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
         WIRE_MOCK_SERVER.resetAll();
         jdbcTemplate.update("DELETE FROM order_items");
+        jdbcTemplate.update("DELETE FROM order_payment_events");
         jdbcTemplate.update("DELETE FROM orders");
         jdbcTemplate.update("DELETE FROM items");
     }
 
-    protected String adminAuthHeader() {
-        return "Bearer " + buildToken(UUID.fromString("00000000-0000-0000-0000-000000000001"), "admin@example.com", Role.ADMIN);
+    protected RequestPostProcessor adminAuthHeader() {
+        return gatewayAuth(UUID.fromString("00000000-0000-0000-0000-000000000001"), "admin@example.com", Role.ADMIN);
     }
 
-    protected String userAuthHeader(UUID userId, String email) {
-        return "Bearer " + buildToken(userId, email, Role.USER);
+    protected RequestPostProcessor userAuthHeader(UUID userId, String email) {
+        return gatewayAuth(userId, email, Role.USER);
     }
 
     protected void stubUserByEmail(String email) {
@@ -135,16 +144,44 @@ public abstract class AbstractIntegrationTest {
         }
     }
 
-    private String buildToken(UUID userId, String email, Role role) {
-        Instant now = Instant.now();
-        return Jwts.builder()
-                .setSubject(email)
-                .claim("email", email)
-                .claim("userId", userId.toString())
-                .claim("role", role.name())
-                .setIssuedAt(Date.from(now))
-                .setExpiration(Date.from(now.plusSeconds(3600)))
-                .signWith(Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8)))
-                .compact();
+    private RequestPostProcessor gatewayAuth(UUID userId, String email, Role role) {
+        return request -> {
+            String userIdValue = userId.toString();
+            String roleValue = role.name();
+            String username = email;
+            String ts = String.valueOf(Instant.now().getEpochSecond());
+            String payload = String.join(
+                    "|",
+                    emptyIfNull(request.getMethod()),
+                    emptyIfNull(request.getRequestURI()),
+                    userIdValue,
+                    roleValue,
+                    email,
+                    username,
+                    ts
+            );
+
+            request.addHeader(USER_ID_HEADER, userIdValue);
+            request.addHeader(USER_ROLE_HEADER, roleValue);
+            request.addHeader(USER_EMAIL_HEADER, email);
+            request.addHeader(USERNAME_HEADER, username);
+            request.addHeader(TS_HEADER, ts);
+            request.addHeader(SIGN_HEADER, sign(payload));
+            return request;
+        };
+    }
+
+    private String emptyIfNull(String value) {
+        return value == null ? "" : value;
+    }
+
+    private String sign(String payload) {
+        try {
+            Mac mac = Mac.getInstance(SIGN_ALGORITHM);
+            mac.init(new SecretKeySpec(internalSecret.getBytes(StandardCharsets.UTF_8), SIGN_ALGORITHM));
+            return Base64.getEncoder().encodeToString(mac.doFinal(payload.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException | InvalidKeyException ex) {
+            throw new IllegalStateException("Failed to sign test gateway headers", ex);
+        }
     }
 }

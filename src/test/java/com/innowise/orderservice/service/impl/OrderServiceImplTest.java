@@ -47,6 +47,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 
 @ExtendWith(MockitoExtension.class)
 class OrderServiceImplTest {
@@ -87,7 +88,7 @@ class OrderServiceImplTest {
         OrderCreateRequest request = OrderCreateRequest.builder()
                 .userId(UUID.fromString("00000000-0000-0000-0000-000000000001"))
                 .userEmail("request@example.com")
-                .status(OrderStatus.NEW)
+                .status(OrderStatus.PAID)
                 .totalPrice(BigDecimal.TEN)
                 .items(List.of(OrderItemRequest.builder().itemId(1L).quantity(1).build()))
                 .build();
@@ -114,6 +115,7 @@ class OrderServiceImplTest {
 
         assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000005"), request.getUserId());
         assertEquals("current@example.com", request.getUserEmail());
+        assertEquals(OrderStatus.NEW, request.getStatus());
         assertNotNull(result.getUser());
         assertEquals("current@example.com", result.getUser().getEmail());
     }
@@ -311,6 +313,7 @@ class OrderServiceImplTest {
         OrderResponse response = OrderResponse.builder().id(1L).status(OrderStatus.PAID).build();
 
         when(orderRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(existing));
+        when(securityUtil.isAdmin()).thenReturn(true);
         when(itemRepository.findAllByIdInAndDeletedAtIsNull(anyCollection())).thenReturn(List.of(Item.builder().id(1L).build()));
         when(orderMapper.toOrderItems(eq(existing), eq(request.getItems()), anyMap())).thenReturn(List.of(item));
         when(orderRepository.save(existing)).thenReturn(existing);
@@ -320,6 +323,21 @@ class OrderServiceImplTest {
 
         assertEquals(OrderStatus.PAID, result.getStatus());
         assertEquals(1, existing.getOrderItems().size());
+    }
+
+    @Test
+    void update_shouldRejectStatusChange_whenNotAdmin() {
+        Order existing = new Order();
+        existing.setStatus(OrderStatus.NEW);
+        OrderUpdateRequest request = OrderUpdateRequest.builder()
+                .status(OrderStatus.PAID)
+                .build();
+
+        when(orderRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(existing));
+        when(securityUtil.isAdmin()).thenReturn(false);
+
+        assertThrows(AccessDeniedException.class, () -> orderService.update(1L, request));
+        verify(orderRepository, never()).save(existing);
     }
 
     @Test

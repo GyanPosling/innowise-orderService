@@ -1,7 +1,9 @@
 package com.innowise.orderservice.config;
 
+import com.innowise.orderservice.exception.InvalidPaymentEventException;
 import com.innowise.orderservice.exception.OrderNotFoundException;
 import com.innowise.orderservice.exception.OrderStatusTransitionException;
+import com.innowise.orderservice.exception.UnsupportedPaymentEventVersionException;
 import com.innowise.orderservice.messaging.event.PaymentCreatedEvent;
 import java.util.HashMap;
 import java.util.Map;
@@ -116,7 +118,12 @@ public class KafkaConfig {
         backOff.setMultiplier(retryMultiplier);
 
         DefaultErrorHandler errorHandler = new DefaultErrorHandler(recoverer, backOff);
-        errorHandler.addNotRetryableExceptions(OrderNotFoundException.class, OrderStatusTransitionException.class);
+        errorHandler.addNotRetryableExceptions(
+                InvalidPaymentEventException.class,
+                OrderNotFoundException.class,
+                OrderStatusTransitionException.class,
+                UnsupportedPaymentEventVersionException.class
+        );
         errorHandler.setCommitRecovered(true);
         return errorHandler;
     }

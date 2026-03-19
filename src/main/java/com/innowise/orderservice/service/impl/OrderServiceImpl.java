@@ -66,6 +66,7 @@ public class OrderServiceImpl implements OrderService {
                 throw new BadRequestException("User id is missing in token");
             }
             request.setUserId(currentUserId);
+            request.setStatus(OrderStatus.NEW);
             String username = securityUtil.getCurrentUsername();
             if (username != null && !username.isBlank()) {
                 request.setUserEmail(username);
@@ -136,6 +137,9 @@ public class OrderServiceImpl implements OrderService {
             order.setUserEmail(request.getUserEmail());
         }
         if (request.getStatus() != null) {
+            if (!securityUtil.isAdmin()) {
+                throw new AccessDeniedException("Only admin can change order status directly");
+            }
             order.setStatus(request.getStatus());
         }
         if (request.getTotalPrice() != null) {
