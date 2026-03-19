@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.serializer.JsonDeserializer;
+import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -211,9 +211,9 @@ class PaymentEventConsumerIntegrationTest extends AbstractIntegrationTest {
                 ConsumerConfig.GROUP_ID_CONFIG, "order-it-" + UUID.randomUUID(),
                 ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest",
                 ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
-                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class,
-                JsonDeserializer.TRUSTED_PACKAGES, "com.innowise.orderservice.messaging.event",
-                JsonDeserializer.VALUE_DEFAULT_TYPE, PaymentCreatedEvent.class.getName()
+                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JacksonJsonDeserializer.class,
+                JacksonJsonDeserializer.TRUSTED_PACKAGES, "com.innowise.orderservice.messaging.event",
+                JacksonJsonDeserializer.VALUE_DEFAULT_TYPE, PaymentCreatedEvent.class.getName()
         );
         return new KafkaConsumer<>(properties);
     }
