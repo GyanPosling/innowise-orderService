@@ -18,6 +18,7 @@ import com.innowise.orderservice.repository.ItemRepository;
 import com.innowise.orderservice.repository.OrderItemRepository;
 import com.innowise.orderservice.repository.OrderRepository;
 import java.math.BigDecimal;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -35,8 +36,9 @@ class OrderItemControllerIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void create_shouldReturnCreatedOrderItem() throws Exception {
+        UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000001");
         Order order = orderRepository.save(Order.builder()
-                .userId(1L)
+                .userId(userId)
                 .userEmail("buyer@example.com")
                 .status(OrderStatus.NEW)
                 .totalPrice(BigDecimal.valueOf(50))
@@ -52,7 +54,7 @@ class OrderItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .build();
 
         mockMvc.perform(post("/api/v1/orders/{orderId}/items", order.getId())
-                        .header(AUTH_HEADER, adminAuthHeader())
+                        .with(adminAuthHeader())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -64,8 +66,9 @@ class OrderItemControllerIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void getById_shouldReturnOrderItem() throws Exception {
+        UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000002");
         Order order = orderRepository.save(Order.builder()
-                .userId(2L)
+                .userId(userId)
                 .userEmail("buyer2@example.com")
                 .status(OrderStatus.NEW)
                 .totalPrice(BigDecimal.valueOf(100))
@@ -81,7 +84,7 @@ class OrderItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .build());
 
         mockMvc.perform(get("/api/v1/orders/{orderId}/items/{id}", order.getId(), orderItem.getId())
-                        .header(AUTH_HEADER, adminAuthHeader()))
+                        .with(adminAuthHeader()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(orderItem.getId()))
                 .andExpect(jsonPath("$.orderId").value(order.getId()))
@@ -91,8 +94,9 @@ class OrderItemControllerIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void getAll_shouldReturnOrderItems() throws Exception {
+        UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000003");
         Order order = orderRepository.save(Order.builder()
-                .userId(3L)
+                .userId(userId)
                 .userEmail("buyer3@example.com")
                 .status(OrderStatus.NEW)
                 .totalPrice(BigDecimal.valueOf(200))
@@ -113,15 +117,16 @@ class OrderItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .build());
 
         mockMvc.perform(get("/api/v1/orders/{orderId}/items", order.getId())
-                        .header(AUTH_HEADER, adminAuthHeader()))
+                        .with(adminAuthHeader()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
     }
 
     @Test
     void update_shouldModifyOrderItem() throws Exception {
+        UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000004");
         Order order = orderRepository.save(Order.builder()
-                .userId(4L)
+                .userId(userId)
                 .userEmail("buyer4@example.com")
                 .status(OrderStatus.NEW)
                 .totalPrice(BigDecimal.valueOf(75))
@@ -141,7 +146,7 @@ class OrderItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .build();
 
         mockMvc.perform(patch("/api/v1/orders/{orderId}/items/{id}", order.getId(), orderItem.getId())
-                        .header(AUTH_HEADER, adminAuthHeader())
+                        .with(adminAuthHeader())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -151,8 +156,9 @@ class OrderItemControllerIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void delete_shouldRemoveOrderItem() throws Exception {
+        UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000005");
         Order order = orderRepository.save(Order.builder()
-                .userId(5L)
+                .userId(userId)
                 .userEmail("buyer5@example.com")
                 .status(OrderStatus.NEW)
                 .totalPrice(BigDecimal.valueOf(300))
@@ -168,7 +174,7 @@ class OrderItemControllerIntegrationTest extends AbstractIntegrationTest {
                 .build());
 
         mockMvc.perform(delete("/api/v1/orders/{orderId}/items/{id}", order.getId(), orderItem.getId())
-                        .header(AUTH_HEADER, adminAuthHeader()))
+                        .with(adminAuthHeader()))
                 .andExpect(status().isNoContent());
     }
 }

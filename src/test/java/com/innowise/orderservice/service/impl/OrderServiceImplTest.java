@@ -37,6 +37,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -46,6 +47,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 
 @ExtendWith(MockitoExtension.class)
 class OrderServiceImplTest {
@@ -71,7 +73,7 @@ class OrderServiceImplTest {
     @Test
     void create_shouldThrowBadRequest_whenUserEmailMissing() {
         OrderCreateRequest request = OrderCreateRequest.builder()
-                .userId(1L)
+                .userId(UUID.fromString("00000000-0000-0000-0000-000000000001"))
                 .status(OrderStatus.NEW)
                 .totalPrice(BigDecimal.TEN)
                 .items(List.of(OrderItemRequest.builder().itemId(1L).quantity(1).build()))
@@ -84,16 +86,16 @@ class OrderServiceImplTest {
     @Test
     void create_shouldUseTokenUser_whenNotAdmin() {
         OrderCreateRequest request = OrderCreateRequest.builder()
-                .userId(1L)
+                .userId(UUID.fromString("00000000-0000-0000-0000-000000000001"))
                 .userEmail("request@example.com")
-                .status(OrderStatus.NEW)
+                .status(OrderStatus.PAID)
                 .totalPrice(BigDecimal.TEN)
                 .items(List.of(OrderItemRequest.builder().itemId(1L).quantity(1).build()))
                 .build();
         Order order = new Order();
         OrderResponse response = OrderResponse.builder()
                 .id(10L)
-                .userId(5L)
+                .userId(UUID.fromString("00000000-0000-0000-0000-000000000005"))
                 .userEmail("current@example.com")
                 .build();
         UserInfoResponse userInfo = UserInfoResponse.builder().email("current@example.com").build();
@@ -101,7 +103,7 @@ class OrderServiceImplTest {
         item.setId(1L);
 
         when(securityUtil.isAdmin()).thenReturn(false);
-        when(securityUtil.getCurrentUserId()).thenReturn(5L);
+        when(securityUtil.getCurrentUserId()).thenReturn(UUID.fromString("00000000-0000-0000-0000-000000000005"));
         when(securityUtil.getCurrentUsername()).thenReturn("current@example.com");
         when(itemRepository.findAllByIdInAndDeletedAtIsNull(any())).thenReturn(List.of(item));
         when(orderMapper.toEntity(eq(request), anyMap())).thenReturn(order);
@@ -111,8 +113,9 @@ class OrderServiceImplTest {
 
         OrderResponse result = orderService.create(request);
 
-        assertEquals(5L, request.getUserId());
+        assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000005"), request.getUserId());
         assertEquals("current@example.com", request.getUserEmail());
+        assertEquals(OrderStatus.NEW, request.getStatus());
         assertNotNull(result.getUser());
         assertEquals("current@example.com", result.getUser().getEmail());
     }
@@ -120,7 +123,7 @@ class OrderServiceImplTest {
     @Test
     void create_shouldThrowBadRequest_whenTokenUserIdMissing() {
         OrderCreateRequest request = OrderCreateRequest.builder()
-                .userId(1L)
+                .userId(UUID.fromString("00000000-0000-0000-0000-000000000001"))
                 .userEmail("user@example.com")
                 .status(OrderStatus.NEW)
                 .totalPrice(BigDecimal.TEN)
@@ -137,7 +140,7 @@ class OrderServiceImplTest {
     @Test
     void create_shouldThrowItemNotFound_whenSomeItemsMissing() {
         OrderCreateRequest request = OrderCreateRequest.builder()
-                .userId(1L)
+                .userId(UUID.fromString("00000000-0000-0000-0000-000000000001"))
                 .userEmail("user@example.com")
                 .status(OrderStatus.NEW)
                 .totalPrice(BigDecimal.TEN)
@@ -230,11 +233,12 @@ class OrderServiceImplTest {
                 .build();
         UserInfoResponse userInfo = UserInfoResponse.builder().email("user@example.com").build();
 
-        when(orderRepository.findAllByUserIdAndDeletedAtIsNull(7L)).thenReturn(List.of(order));
+        UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000007");
+        when(orderRepository.findAllByUserIdAndDeletedAtIsNull(userId)).thenReturn(List.of(order));
         when(orderMapper.toResponse(order)).thenReturn(response);
         when(userLookupService.getUsersByEmails(anyList())).thenReturn(List.of(userInfo));
 
-        List<OrderResponse> results = orderService.getByUserId(7L, false);
+        List<OrderResponse> results = orderService.getByUserId(userId, false);
 
         assertEquals(1, results.size());
         assertEquals("user@example.com", results.get(0).getUser().getEmail());
@@ -253,11 +257,14 @@ class OrderServiceImplTest {
     @Test
     void update_shouldSetUserId_whenAdmin() {
         Order existing = new Order();
-        existing.setUserId(1L);
+        existing.setUserId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
         OrderUpdateRequest request = OrderUpdateRequest.builder()
-                .userId(99L)
+                .userId(UUID.fromString("00000000-0000-0000-0000-000000000099"))
                 .build();
-        OrderResponse response = OrderResponse.builder().id(1L).userId(99L).build();
+        OrderResponse response = OrderResponse.builder()
+                .id(1L)
+                .userId(UUID.fromString("00000000-0000-0000-0000-000000000099"))
+                .build();
 
         when(orderRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(existing));
         when(securityUtil.isAdmin()).thenReturn(true);
@@ -266,18 +273,21 @@ class OrderServiceImplTest {
 
         OrderResponse result = orderService.update(1L, request);
 
-        assertEquals(99L, existing.getUserId());
-        assertEquals(99L, result.getUserId());
+        assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000099"), existing.getUserId());
+        assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000099"), result.getUserId());
     }
 
     @Test
     void update_shouldIgnoreUserId_whenNotAdmin() {
         Order existing = new Order();
-        existing.setUserId(1L);
+        existing.setUserId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
         OrderUpdateRequest request = OrderUpdateRequest.builder()
-                .userId(99L)
+                .userId(UUID.fromString("00000000-0000-0000-0000-000000000099"))
                 .build();
-        OrderResponse response = OrderResponse.builder().id(1L).userId(1L).build();
+        OrderResponse response = OrderResponse.builder()
+                .id(1L)
+                .userId(UUID.fromString("00000000-0000-0000-0000-000000000001"))
+                .build();
 
         when(orderRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(existing));
         when(securityUtil.isAdmin()).thenReturn(false);
@@ -286,8 +296,8 @@ class OrderServiceImplTest {
 
         OrderResponse result = orderService.update(1L, request);
 
-        assertEquals(1L, existing.getUserId());
-        assertEquals(1L, result.getUserId());
+        assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000001"), existing.getUserId());
+        assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000001"), result.getUserId());
     }
 
     @Test
@@ -303,6 +313,7 @@ class OrderServiceImplTest {
         OrderResponse response = OrderResponse.builder().id(1L).status(OrderStatus.PAID).build();
 
         when(orderRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(existing));
+        when(securityUtil.isAdmin()).thenReturn(true);
         when(itemRepository.findAllByIdInAndDeletedAtIsNull(anyCollection())).thenReturn(List.of(Item.builder().id(1L).build()));
         when(orderMapper.toOrderItems(eq(existing), eq(request.getItems()), anyMap())).thenReturn(List.of(item));
         when(orderRepository.save(existing)).thenReturn(existing);
@@ -312,6 +323,21 @@ class OrderServiceImplTest {
 
         assertEquals(OrderStatus.PAID, result.getStatus());
         assertEquals(1, existing.getOrderItems().size());
+    }
+
+    @Test
+    void update_shouldRejectStatusChange_whenNotAdmin() {
+        Order existing = new Order();
+        existing.setStatus(OrderStatus.NEW);
+        OrderUpdateRequest request = OrderUpdateRequest.builder()
+                .status(OrderStatus.PAID)
+                .build();
+
+        when(orderRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(existing));
+        when(securityUtil.isAdmin()).thenReturn(false);
+
+        assertThrows(AccessDeniedException.class, () -> orderService.update(1L, request));
+        verify(orderRepository, never()).save(existing);
     }
 
     @Test

@@ -15,7 +15,7 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: user_id
-                  type: BIGINT
+                  type: UUID
                   constraints:
                     nullable: false
               - column:

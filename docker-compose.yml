@@ -11,6 +11,25 @@ services:
     volumes:
       - orderservice_postgres_data:/var/lib/postgresql/data
 
+  kafka:
+    image: bitnami/kafka:3.7
+    container_name: orderservice-kafka
+    environment:
+      KAFKA_CFG_NODE_ID: 1
+      KAFKA_CFG_PROCESS_ROLES: broker,controller
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_KRAFT_CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+    ports:
+      - "9092:9092"
+
   orderservice:
     build:
       context: .
@@ -19,6 +38,7 @@ services:
     container_name: orderservice-app
     depends_on:
       - postgres
+      - kafka
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
@@ -27,6 +47,8 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       JWT_SECRET: ${JWT_SECRET}
       USERSERVICE_BASE_URL: ${USERSERVICE_BASE_URL:-http://host.docker.internal:8081}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      PAYMENT_CREATED_TOPIC: ${PAYMENT_CREATED_TOPIC:-create-payment}
     ports:
       - "8080:8080"
 

@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: 6
+      author: orderservice
+      changes:
+        - createTable:
+            tableName: order_payment_events
+            columns:
+              - column:
+                  name: order_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payment_id
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: order_payment_events
+            columnNames: order_id, payment_id
+            constraintName: pk_order_payment_events
+        - addForeignKeyConstraint:
+            baseTableName: order_payment_events
+            baseColumnNames: order_id
+            referencedTableName: orders
+            referencedColumnNames: id
+            constraintName: fk_order_payment_events_order_id
+            onDelete: CASCADE
+        - createIndex:
+            tableName: order_payment_events
+            indexName: idx_order_payment_events_payment_id
+            columns:
+              - column:
+                  name: payment_id

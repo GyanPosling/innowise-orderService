@@ -7,6 +7,7 @@ import com.innowise.orderservice.model.entity.OrderStatus;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -51,7 +52,7 @@ public interface OrderService {
      * @param includeDeleted whether to include soft-deleted orders
      * @return list of orders
      */
-    List<OrderResponse> getByUserId(Long userId, boolean includeDeleted);
+    List<OrderResponse> getByUserId(UUID userId, boolean includeDeleted);
 
     /**
      * Updates a non-deleted order.

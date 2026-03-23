@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -55,7 +56,7 @@ public interface OrderControllerApi {
             @ApiResponse(responseCode = "200", description = "Orders retrieved"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
-    ResponseEntity<List<OrderResponse>> getByUserId(Long userId, boolean includeDeleted);
+    ResponseEntity<List<OrderResponse>> getByUserId(UUID userId, boolean includeDeleted);
 
     @Operation(summary = "Partially update order by ID")
     @ApiResponses(value = {

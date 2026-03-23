@@ -4,6 +4,7 @@ import com.innowise.orderservice.model.entity.OrderStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,7 +20,7 @@ public class OrderResponse {
 
     private Long id;
 
-    private Long userId;
+    private UUID userId;
 
     private String userEmail;
 
@@ -37,4 +38,3 @@ public class OrderResponse {
 
     private List<OrderItemResponse> items;
 }
-

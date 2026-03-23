@@ -19,9 +19,11 @@ import org.mapstruct.Mapping;
 public interface OrderMapper {
 
     @Mapping(target = "orderItems", ignore = true)
+    @Mapping(target = "processedPaymentIds", ignore = true)
     Order toEntity(OrderCreateRequest request, @Context Map<Long, Item> itemsById);
 
     @Mapping(target = "items", source = "orderItems")
+    @Mapping(target = "user", ignore = true)
     OrderResponse toResponse(Order order);
 
     @Mapping(target = "itemId", source = "item.id")
@@ -56,5 +58,4 @@ public interface OrderMapper {
     }
 
 }
-
 

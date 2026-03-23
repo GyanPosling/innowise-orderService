@@ -1,6 +1,7 @@
 package com.innowise.orderservice.service;
 
 import com.innowise.orderservice.model.entity.Role;
+import java.util.UUID;
 
 public interface JwtService {
     void validateToken(String token);
@@ -9,7 +10,7 @@ public interface JwtService {
 
     String extractEmail(String token);
 
-    Long extractUserId(String token);
+    UUID extractUserId(String token);
 
     Role extractRole(String token);
 }
