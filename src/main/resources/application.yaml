@@ -20,6 +20,22 @@ jwt:
 userservice:
   base-url: ${USERSERVICE_BASE_URL:http://localhost:8081}
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
 resilience4j:
   circuitbreaker:
     instances:
